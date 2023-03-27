@@ -16,5 +16,6 @@ library(data.table)
 ```{r}
 descriptions<- fread("Data File_Case Study_Factor Analysis_Variables.csv")
 df<- fread("Data File_Case_Study_Factor Analysis_MD.csv")
+
 ```
 
