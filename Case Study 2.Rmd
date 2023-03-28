@@ -9,13 +9,39 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r message=FALSE, warning= FALSE}
 library(data.table)
+library(pastecs)
+library(dplyr)
+library(corrplot)
+library(naniar)
+library(psych)
 ```
 
 ```{r}
 descriptions<- fread("Data File_Case Study_Factor Analysis_Variables.csv")
-df<- fread("Data File_Case_Study_Factor Analysis_MD.csv")
+df<-read.csv("Data File_Case_Study_Factor Analysis_MD.csv")
+```
 
+```{r}
+df1<-df[,c(9:41)]
+vis_miss(df1) #qd22,26,28,29 misses some data
+df1<-na.omit(df1)# remove them as she said to do
+vis_miss(df1)
+```
+- how many are the requited case
+-skewness and kurtotis
+
+```{r}
+raqMatrix <- cor(df1)
+corrplot(as.matrix(raqMatrix))
+```
+
+
+```{r}
+PC0 <- psych::principal(df1, 
+                        rotate="varimax", scores=TRUE)
+
+plot(PC0$values,xlab="Factor Number",ylab="Eigenvalue",main="Scree plot",cex.lab=1.2,cex.axis=1.2,cex.main=1.8)+abline(h=1)
 ```
 
