@@ -42,8 +42,10 @@ corrplot(as.matrix(raqMatrix))
 
 ####  check whether the data set and all of its variables are suitable for factor analysis.
 A strong correlation between two variables is most likely a signal of redundancy.
-*from slides non molto ragionato* More precisely, there might be an underlying factor causing those variables to move the way that they move. A weaker correlation indicates that there are different factors affecting the variables.
-We list below the variables displaying higher correlation:
+In regards to the correlation plot above, there are not very clear patterns, but we can observe some variables are highly correlated between one another, which is good since we want to perform a factor analysis.
+More precisely, we are interested in the underlying factors causing those variables to move the way that they move. A weaker correlation indicates that there are different factors affecting the variables, meaning they do not describe the same domain.
+
+Listed below are the variables displaying higher correlation, with a selected threshold of 0.75.
 ```{r}
 # which pairs?
 high_cor<- findCorrelation(raqMatrix, cutoff = 0.75)
@@ -58,14 +60,46 @@ for (i in 1:nrow(pairs)) {
   }}
 ```
 
+To make sure that our data is suitable for Factor Analysis, we want to test to what extent our variables are correlated to one another.
+To further the analysis we measure the Sampling Adequacy based on the Kaiser-Meyer-Olking criterion:
 
-*copiato dall'esercizio in classe*
 ```{r}
+#Kaiser-Meyer-Olkin Statistics
 KMOS(df1)
+```
+The KMO is a value that goes from 0 to 1, 1 indicating that all variables are suitable for factor analysis, 0 means that the correlations between the predictors are only due to the random error in the measurements.*idk if this sentence makes sense*
+The measurement is computed with the following formula:
+$MO_j=\frac{\sum_{i\neq j}r^2_{ij}}{\sum_{i \neq j} r^2_{ij}+\sum_{i\neq j}u}$
+where $r_{ij}$ is the correlation matrix, $u_{ij}$is the partial covariance matrix.
 
+Our KMO value amounts to 0.96 which satisfying (above 0.6), the variables are suitable for factor analysis. Qd4 displays a lower measure than all other variables, we must look out for it in the next steps, even if it is not included in the high correlation list.
+
+```{r}
+# Anti-Image correlation matrix
+# we use the KMO function fro the psych package
+KMO.df<-KMO(df1)$ImCov
+
+ImCov_df <- as.data.frame(KMO.df)
+row.names(ImCov_df) <- colnames(ImCov_df) <- colnames(df1)
+
+# Highlight diagonal and add row/column names
+kbl(ImCov_df, align = "c") %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(0, bold = TRUE)
+  mutate_all(funs(cell_spec(., bold = ifelse(row.names(ImCov_df) == colnames(ImCov_df), TRUE, FALSE))))
+
+# Print anti-image correlation matrix as a table
+ImCov_kbl
 ```
 
+
+
+Another way to judge whether our data is suitable for factor analysis would be the Bartlett's test.The null hypothesis of this test is that the sample originates from a population, where all variables are uncorrelated, or in other words the correlation matrix equals the identity matrix.
+The test is more suited for cases in which each variable has less than 5 observations, because it is very sensitive within large sample it might not be a good fit for us. 
+
 ```{r}
+# l ho fatto ma possiamo anche toglierlo imo
+#Bartlett's Test of Sphericity
 bart_spher(df1)
 ```
 
