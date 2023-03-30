@@ -113,7 +113,6 @@ bart_spher(df1)
 The test results highly significant, we can reject the null hypothesis, the data is fit for factor analysis.
 
 
-
 #### Exploratory principal analysis
 
 ```{r}
@@ -134,13 +133,12 @@ PC1 <- psych::principal(df1,
                         rotate="varimax",
                         nfactors=8, 
                         scores=TRUE)
+PC1
 
-PC1_communalities=data.frame(sort(PC1$communality))
-PC1_communalities %>% kbl()
 ```
 
 We print out the communalities (sum of squared factor loadings for each variable) for all the variables, sorted in ascending order.
-The communality of a variable describes how much each factor, out of the designed 7, contributes/explains the variance of this variable.
+The communality of a variable describes how much each factor, out of the extracted 8, contributes/explains the variance of this variable.
 So if the communality equals 1 then a complete replication of the variable can me obtained through the sole use of factors.
 In our case all variables have communalities below 1, so there is part of the variance that cannot be explained/modelled through factors.
 The lowest communalities are qd23,qd26,qd28.
@@ -150,16 +148,18 @@ As previously done, we utilized the "varimax" rotation, which is designed to sim
 
 #### Principal Axis Factor Anlisys:
 
-PAF is an exploratory factor analysis method, it attempts to find the least number of factors accounting for common variance of a set of variables.
+PAF is an exploratory factor analysis method (or Factor Extraction Method), it attempts to find the least number of factors accounting for common variance of a set of variables.
 It uses a reduced correlation matrix, with a diagonal containing communalities (covariances).
 
-It assumes that the variance of the observed variables cannot be fully explained by the extracted factors, it decomposes the variance in communality and unique variance.
+It assumes that the variance of the observed variables cannot be fully explained by the extracted factors, it decomposes the variance in communality and unique variance, without accounting for specific and error variability.
 
 ```{r}
-# in R the starting values of the communalities are not needed
-PAF_8<-principal(df1, nfactors = 8, rotate = "oblimin", scores = TRUE, method = "pa")
-print(PAF_8$loadings, cutoff=0.3,sort=TRUE)
+# printing out the communalities
+PC1$communality %>% kbl()
+
 ```
+
+There seem to be no variables with incredibly low communality measure, qd23 is slightly above 0.5, but it is not worrying in itself.
 
 #### total variance explained
 
