@@ -36,6 +36,8 @@ vis_miss(df1)
 ```
 - how many are the requited case
 
+### Exercise 1: Orthogonal Factor Analysis
+
 ```{r}
 raqMatrix <- cor(df1)
 corrplot(as.matrix(raqMatrix))
@@ -78,7 +80,9 @@ Our KMO value amounts to 0.96 which satisfying (above 0.6), the variables are su
 ```{r}
 # Anti-Image correlation matrix
 # we use the KMO function from the psych package
-KMO(df1)$ImCov %>% diag()# only printing the diagonal
+KMO(df1)$ImCov %>% diag()%>% kbl()# only printing the diagonal
+# maybe add rownames
+# the results are very ugly, she doesnt do it in the exercise. let's consider not including it
 
 ```
 
@@ -93,6 +97,7 @@ The test is more suited for cases in which each variable has less than 5 observa
 bart_spher(df1)
 ```
 
+The test results highly significant, we can reject the null hypothesis, the data is fit for factor analysis.
 
 
 #### Principal Component Analysis 1
@@ -103,11 +108,14 @@ PC0 <- psych::principal(df1,
 plot(PC0$values,xlab="Factor Number",ylab="Eigenvalue",main="Scree plot",cex.lab=1.2,cex.axis=1.2,cex.main=1.8)+abline(h=1)
 ```
 
+The Eigenvalues are plotted above, the horizontal line represents the significance threshold.
+After the first value there is a very steep drop, followed by a slower decline. The point above the significance level(and above the "elbow") are around 7 or 8.
 
+We attempt at retaining 8  factors:
 ```{r}
 PC1 <- psych::principal(df1, 
                         rotate="varimax",
-                        nfactors=7, 
+                        nfactors=8, 
                         scores=TRUE)
 # i did 7 bc with 6 the loadings looked a mess
 # i guess that the number of factors depends on how many dots are above the line
@@ -115,8 +123,15 @@ PC1_communalities=data.frame(sort(PC1$communality))
 PC1_communalities %>% kbl()
 ```
 
+We print out the communalities (sum of squared factor loadings for each variable) for all the variables, sorted in ascending order.
+The communality of a variable describes how much each factor, out of the designed 7, contributes/explains the variance of this variable. So if the communality equals 1 then a complete replication of the variable can me obtained through the sole use of factors.
+In our case all variables have communalities below 1, so there is part of the variance that cannot be explained/modelled through factors.
+
+As previously done, we utilized the "varimax" rotation, which is designed to simplify the interpretation of the loadings. 
+"Simplification of factors: maximize variance of squared factor loadings; when loadings close to 0 or close to 1, factor becomes easier to interpret."
+
+
 #### total variance explained
-*I honeslty have no clue where this is going sorry*
 ```{r}
 EigenValue=PC1$values
 Variance=EigenValue/ncol(subset(df1))*100
@@ -124,6 +139,11 @@ SumVariance=cumsum(EigenValue/ncol(subset(df1)))
 Total_Variance_Explained=cbind(EigenValue=EigenValue[EigenValue>0],Variance=Variance[Variance>0],Total_Variance=SumVariance[Variance>0])
 Total_Variance_Explained %>% kbl()
 ```
+
+Total Variance: $\begin{aligned}s^2_j&=1=h^2_j+c^2_j+e^2_j\\&=communality+specificity+measurament error\\&=h^2_j+d^2_j\\&=(1-d^2_j)+(c^2_j+e^2_j)\\&= communality+uniqueness\end{aligned}$
+
+
+
 
 
 ```{r}
