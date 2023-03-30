@@ -2,7 +2,10 @@
 title: "Case Study 2"
 author: "Manuela Giansante & Lucia Camenisch"
 date: "2023-03-27"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
 editor_options: 
   markdown: 
     wrap: sentence
@@ -24,6 +27,8 @@ library(kableExtra)
 library(knitr)
 library(caret)
 library(REdaS)
+library(GPArotation)
+library(nFactors)
 ```
 
 ```{r}
@@ -78,7 +83,10 @@ To further the analysis we measure the Sampling Adequacy based on the Kaiser-Mey
 KMOS(df1)
 ```
 
-The KMO is a value that goes from 0 to 1, 1 indicating that all variables are suitable for factor analysis, 0 means that the correlations between the predictors are only due to the random error in the measurements.*idk if this sentence makes sense* The measurement is computed with the following formula: $MO_j=\frac{\sum_{i\neq j}r^2_{ij}}{\sum_{i \neq j} r^2_{ij}+\sum_{i\neq j}u}$ where $r_{ij}$ is the correlation matrix, $u_{ij}$is the partial covariance matrix.
+The KMO is a value that goes from 0 to 1, 1 indicating that all variables are suitable for factor analysis, 0 means that the correlations between the predictors are only due to the random error in the measurements.*idk if this sentence makes sense* 
+The measurement is computed with the following formula: 
+$MO_j=\frac{\sum_{i\neq j}r^2_{ij}}{\sum_{i \neq j} r^2_{ij}+\sum_{i\neq j}u}$ 
+where $r_{ij}$ is the correlation matrix, $u_{ij}$is the partial covariance matrix.
 
 Our KMO value amounts to 0.96 which satisfying (above 0.6), the variables are suitable for factor analysis.
 Qd4 displays a lower measure than all other variables, we must look out for it in the next steps, even if it is not included in the high correlation list.
@@ -87,12 +95,13 @@ Qd4 displays a lower measure than all other variables, we must look out for it i
 # Anti-Image correlation matrix
 # we use the KMO function from the psych package
 KMO(df1)$ImCov %>% diag()%>% kbl()# only printing the diagonal
-# maybe add rownames
-# the results are very ugly, she doesnt do it in the exercise. let's consider not including it
+
 
 ```
 
-Another way to judge whether our data is suitable for factor analysis would be the Bartlett's test.The null hypothesis of this test is that the sample originates from a population, where all variables are uncorrelated, or in other words the correlation matrix equals the identity matrix.
+The above printed diagonal of the Anti-Image-Correlation-Matrix, the anti-image measures the portion of a variable's variance that cannot be explained by other variable. In our case there are some below 0.5 values indicating that some topics have not been sufficiently covered in the questionnaire.
+
+Another way to judge whether our data is suitable for factor analysis would be the **Bartlett's test**.The null hypothesis of this test is that the sample originates from a population, where all variables are uncorrelated, or in other words the correlation matrix equals the identity matrix.
 The test is more suited for cases in which each variable has less than 5 observations, because it is very sensitive within large sample it might not be a good fit for us.
 
 ```{r}
@@ -103,7 +112,9 @@ bart_spher(df1)
 
 The test results highly significant, we can reject the null hypothesis, the data is fit for factor analysis.
 
-#### Principal Component Analysis 1
+
+
+#### Exploratory principal analysis
 
 ```{r}
 PC0 <- psych::principal(df1, 
@@ -123,8 +134,7 @@ PC1 <- psych::principal(df1,
                         rotate="varimax",
                         nfactors=8, 
                         scores=TRUE)
-# i did 7 bc with 6 the loadings looked a mess
-# i guess that the number of factors depends on how many dots are above the line
+
 PC1_communalities=data.frame(sort(PC1$communality))
 PC1_communalities %>% kbl()
 ```
@@ -138,6 +148,19 @@ The lowest communalities are qd23,qd26,qd28.
 As previously done, we utilized the "varimax" rotation, which is designed to simplify the interpretation of the loadings.
 "Simplification of factors: maximize variance of squared factor loadings; when loadings close to 0 or close to 1, factor becomes easier to interpret."
 
+#### Principal Axis Factor Anlisys:
+
+PAF is an exploratory factor analysis method, it attempts to find the least number of factors accounting for common variance of a set of variables.
+It uses a reduced correlation matrix, with a diagonal containing communalities (covariances).
+
+It assumes that the variance of the observed variables cannot be fully explained by the extracted factors, it decomposes the variance in communality and unique variance.
+
+```{r}
+# in R the starting values of the communalities are not needed
+PAF_8<-principal(df1, nfactors = 8, rotate = "oblimin", scores = TRUE, method = "pa")
+print(PAF_8$loadings, cutoff=0.3,sort=TRUE)
+```
+
 #### total variance explained
 
 ```{r}
@@ -148,7 +171,11 @@ Total_Variance_Explained=cbind(EigenValue=EigenValue[EigenValue>0],Variance=Vari
 Total_Variance_Explained 
 ```
 
-Total Variance: $\begin{aligned}s^2_j&=1=h^2_j+c^2_j+e^2_j\\&=communality+specificity+measurament error\\&=h^2_j+d^2_j\\&=(1-d^2_j)+(c^2_j+e^2_j)\\&= communality+uniqueness\end{aligned}$ The 8 factors explain about 80% of the total variance in the data.
+Total Variance:
+
+$\begin{aligned}s^2_j&=1=h^2_j+c^2_j+e^2_j\\&=communality+specificity+measurament error\\&=h^2_j+d^2_j\\&=(1-d^2_j)+(c^2_j+e^2_j)\\&= communality+uniqueness\end{aligned}$
+
+The 8 factors explain about 80% of the total variance in the data.
 
 #### Loadings for all variables:
 
@@ -199,7 +226,17 @@ PC3_new <- psych::principal(subset(df1, select = c(qd1:qd5,qd7,qd9:qd25,qd27,qd2
 print(PC3_new$loadings, cutoff=0.3,sort=TRUE)
 ```
 
-It does not, our final selection is `c(qd1:qd7,qd9:qd25,qd27,qd29:qd33)`
-*should add the whole discourse about what means what*
+It does not, our final selection is `c(qd1:qd7,qd9:qd25,qd27,qd29:qd33)` *should add the whole discourse about what means what*
 
-### Exercise 2:
+### 1.1 Do all of the variables in your final solution show clear loading patterns?
+
+### 1.2 For your final solution run a principal component analysis and compare the results. Are there differences to your solution based on principal axis factoring?
+
+
+### 1.3 What do the eigenvalues of the factors/quality dimensions tell us about their relevance for repurchase behaviour?
+
+### Exercise 2: Oblique Factor Anlysis
+
+```{r}
+
+```
