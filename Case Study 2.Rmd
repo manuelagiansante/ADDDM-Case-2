@@ -146,7 +146,7 @@ The lowest communalities are qd23,qd26,qd28.
 As previously done, we utilized the "varimax" rotation, which is designed to simplify the interpretation of the loadings.
 "Simplification of factors: maximize variance of squared factor loadings; when loadings close to 0 or close to 1, factor becomes easier to interpret."
 
-#### Principal Axis Factor Anlisys:
+#### Principal Axis Factor Analysis:
 
 PAF is an exploratory factor analysis method (or Factor Extraction Method), it attempts to find the least number of factors accounting for common variance of a set of variables.
 It uses a reduced correlation matrix, with a diagonal containing communalities (covariances).

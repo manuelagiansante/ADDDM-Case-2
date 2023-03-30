@@ -1727,7 +1727,8 @@ library(kableExtra)
 library(knitr)
 library(caret)
 library(REdaS)
-library(GPArotation)</code></pre>
+library(GPArotation)
+library(nFactors)</code></pre>
 <pre class="r"><code>descriptions&lt;- fread(&quot;Data File_Case Study_Factor Analysis_Variables.csv&quot;)
 df&lt;-read.csv(&quot;Data File_Case_Study_Factor Analysis_MD.csv&quot;)</code></pre>
 <pre class="r"><code>df1&lt;-df[,c(9:41)]
@@ -1996,14 +1997,17 @@ x
 </tr>
 </tbody>
 </table>
-<pre class="r"><code># maybe add rownames
-# the results are very ugly, she doesnt do it in the exercise. let&#39;s consider not including it</code></pre>
+<p>The above printed diagonal of the Anti-Image-Correlation-Matrix, the
+anti-image measures the portion of a variable’s variance that cannot be
+explained by other variable. In our case there are some below 0.5 values
+indicating that some topics have not been sufficiently covered in the
+questionnaire.</p>
 <p>Another way to judge whether our data is suitable for factor analysis
-would be the Bartlett’s test.The null hypothesis of this test is that
-the sample originates from a population, where all variables are
-uncorrelated, or in other words the correlation matrix equals the
-identity matrix. The test is more suited for cases in which each
-variable has less than 5 observations, because it is very sensitive
+would be the <strong>Bartlett’s test</strong>.The null hypothesis of
+this test is that the sample originates from a population, where all
+variables are uncorrelated, or in other words the correlation matrix
+equals the identity matrix. The test is more suited for cases in which
+each variable has less than 5 observations, because it is very sensitive
 within large sample it might not be a good fit for us.</p>
 <pre class="r"><code># l ho fatto ma possiamo anche toglierlo imo
 #Bartlett&#39;s Test of Sphericity
@@ -2018,71 +2022,8 @@ bart_spher(df1)</code></pre>
 <p>The test results highly significant, we can reject the null
 hypothesis, the data is fit for factor analysis.</p>
 </div>
-<div id="principal-axis-factor-anlysis" class="section level4">
-<h4>Principal Axis Factor Anlysis:</h4>
-<p>PAF is an exploratory factor analysis method, it attempts to find the
-least number of factors accounting for common variance of a set of
-variables. It uses a reduced correlation matrix, with a diagonal
-containing communalities.</p>
-<p><em>in the assignment she says paf with varimax which just is not a
-thing?so idk i did both</em></p>
-<p>source:(<a href="https://stats.stackexchange.com/questions/280746/what-is-the-difference-between-pca-and-paf-method-in-factor-analysis" class="uri">https://stats.stackexchange.com/questions/280746/what-is-the-difference-between-pca-and-paf-method-in-factor-analysis</a>)</p>
-<pre class="r"><code>PAF_8&lt;-principal(df1, nfactors = 8, rotate = &quot;oblimin&quot;, scores = TRUE, method = &quot;pa&quot;)
-print(PAF_8$loadings, cutoff=0.3,sort=TRUE)</code></pre>
-<pre><code>## 
-## Loadings:
-##      TC2    TC1    TC5    TC4    TC6    TC3    TC8    TC7   
-## qd9   0.919                                                 
-## qd14  0.956                                                 
-## qd19  0.926                                                 
-## qd21  0.892                                                 
-## qd24  0.949                                                 
-## qd2          0.868                                          
-## qd5          0.767                                          
-## qd7          0.852                                          
-## qd12         0.838                                          
-## qd16         0.799                                          
-## qd1                 0.937                                   
-## qd10                0.862                                   
-## qd20                0.909                                   
-## qd27                0.872                                   
-## qd3                        0.899                            
-## qd11                       0.917                            
-## qd13                       0.814                            
-## qd30                       0.730                            
-## qd15                              0.796                     
-## qd17                              0.754                     
-## qd26                              0.538                     
-## qd28                              0.542                     
-## qd31                              0.678                     
-## qd32                              0.728                     
-## qd22                                     0.919              
-## qd29                                     0.899              
-## qd33                                     0.912              
-## qd6                                             0.821       
-## qd8                                             0.628       
-## qd18                                            0.764       
-## qd25                                            0.898       
-## qd4                                                    0.824
-## qd23                                                   0.655
-## 
-##                  TC2   TC1   TC5   TC4   TC6   TC3   TC8   TC7
-## SS loadings    4.343 3.621 3.309 2.916 2.829 2.616 2.591 1.220
-## Proportion Var 0.132 0.110 0.100 0.088 0.086 0.079 0.079 0.037
-## Cumulative Var 0.132 0.241 0.342 0.430 0.516 0.595 0.673 0.710</code></pre>
-</div>
-</div>
-<div id="do-all-of-the-variables-in-your-final-solution-show-clear-loading-patterns" class="section level3">
-<h3>1.1 Do all of the variables in your final solution show clear
-loading patterns?</h3>
-<p>In our PAF there seem to be cl</p>
-</div>
-<div id="for-your-final-solution-run-a-principal-component-analysis-and-compare-the-results.-are-there-differences-to-your-solution-based-on-principal-axis-factoring" class="section level3">
-<h3>1.2 For your final solution run a principal component analysis and
-compare the results. Are there differences to your solution based on
-principal axis factoring?</h3>
-<div id="principal-component-analysis-1" class="section level4">
-<h4>Principal Component Analysis 1</h4>
+<div id="exploratory-principal-analysis" class="section level4">
+<h4>Exploratory principal analysis</h4>
 <pre class="r"><code>PC0 &lt;- psych::principal(df1, 
                         rotate=&quot;varimax&quot;, scores=TRUE)
 
@@ -2098,51 +2039,118 @@ level(and above the “elbow”) are around 7 or 8.</p>
                         rotate=&quot;varimax&quot;,
                         nfactors=8, 
                         scores=TRUE)
-# i did 7 bc with 6 the loadings looked a mess
-# i guess that the number of factors depends on how many dots are above the line
-PC1_communalities=data.frame(sort(PC1$communality))
-PC1_communalities %&gt;% kbl()</code></pre>
+PC1</code></pre>
+<pre><code>## Principal Components Analysis
+## Call: psych::principal(r = df1, nfactors = 8, rotate = &quot;varimax&quot;, scores = TRUE)
+## Standardized loadings (pattern matrix) based upon correlation matrix
+##       RC2  RC1   RC7  RC5   RC4   RC8   RC3   RC6   h2   u2 com
+## qd1  0.20 0.22  0.18 0.82  0.15  0.22  0.13  0.02 0.88 0.12 1.7
+## qd2  0.21 0.76  0.25 0.21  0.19  0.18  0.21  0.01 0.83 0.17 2.0
+## qd3  0.17 0.17  0.17 0.15  0.81  0.23  0.15 -0.01 0.83 0.17 1.6
+## qd4  0.01 0.02 -0.12 0.02 -0.10 -0.10  0.02  0.81 0.69 0.31 1.1
+## qd5  0.19 0.70  0.21 0.23  0.20  0.26  0.20  0.08 0.78 0.22 2.4
+## qd6  0.22 0.28  0.20 0.26  0.20  0.75  0.11  0.02 0.85 0.15 2.2
+## qd7  0.25 0.75  0.22 0.20  0.23  0.23  0.16  0.01 0.85 0.15 2.1
+## qd8  0.23 0.35  0.20 0.25  0.21  0.62  0.19 -0.03 0.75 0.25 3.2
+## qd9  0.85 0.16  0.19 0.17  0.16  0.16  0.12  0.02 0.87 0.13 1.5
+## qd10 0.23 0.24  0.21 0.78  0.21  0.24  0.09  0.05 0.87 0.13 2.0
+## qd11 0.16 0.18  0.21 0.15  0.81  0.12  0.07 -0.02 0.81 0.19 1.5
+## qd12 0.21 0.74  0.21 0.22  0.24  0.20  0.18  0.02 0.81 0.19 2.1
+## qd13 0.22 0.27  0.21 0.22  0.76  0.15  0.15  0.01 0.84 0.16 2.0
+## qd14 0.87 0.16  0.17 0.15  0.14  0.15  0.09  0.02 0.88 0.12 1.4
+## qd15 0.22 0.15  0.77 0.22  0.21  0.14  0.16  0.13 0.81 0.19 1.9
+## qd16 0.20 0.70  0.20 0.23  0.17  0.22  0.13  0.05 0.72 0.28 2.1
+## qd17 0.25 0.15  0.74 0.22  0.25  0.15  0.13  0.10 0.80 0.20 2.0
+## qd18 0.20 0.24  0.14 0.26  0.21  0.70  0.07  0.16 0.75 0.25 2.2
+## qd19 0.85 0.18  0.19 0.16  0.15  0.13  0.12  0.03 0.87 0.13 1.4
+## qd20 0.21 0.24  0.19 0.80  0.19  0.22  0.10  0.03 0.88 0.12 1.8
+## qd21 0.82 0.19  0.15 0.15  0.17  0.17  0.09  0.01 0.83 0.17 1.5
+## qd22 0.14 0.19  0.24 0.14  0.12  0.11  0.85 -0.02 0.88 0.12 1.5
+## qd23 0.03 0.04  0.13 0.05  0.10  0.23 -0.07  0.68 0.55 0.45 1.4
+## qd24 0.87 0.17  0.20 0.17  0.14  0.13  0.09  0.01 0.90 0.10 1.4
+## qd25 0.21 0.23  0.16 0.22  0.15  0.79  0.13  0.04 0.84 0.16 1.8
+## qd26 0.18 0.29  0.60 0.06  0.14  0.12  0.32 -0.11 0.63 0.37 2.7
+## qd27 0.21 0.23  0.23 0.78  0.21  0.20  0.18  0.03 0.88 0.12 2.0
+## qd28 0.15 0.34  0.59 0.09  0.08  0.18  0.25 -0.13 0.61 0.39 2.7
+## qd29 0.14 0.20  0.27 0.13  0.13  0.09  0.84 -0.01 0.87 0.13 1.5
+## qd30 0.24 0.27  0.26 0.23  0.71  0.17  0.19  0.01 0.81 0.19 2.5
+## qd31 0.16 0.22  0.69 0.11  0.14  0.09  0.27 -0.13 0.68 0.32 1.9
+## qd32 0.23 0.12  0.72 0.31  0.25  0.15  0.14  0.12 0.80 0.20 2.2
+## qd33 0.11 0.17  0.23 0.12  0.16  0.12  0.84 -0.01 0.85 0.15 1.5
+## 
+##                        RC2  RC1  RC7  RC5  RC4  RC8  RC3  RC6
+## SS loadings           4.68 3.97 3.93 3.54 3.31 2.95 2.86 1.24
+## Proportion Var        0.14 0.12 0.12 0.11 0.10 0.09 0.09 0.04
+## Cumulative Var        0.14 0.26 0.38 0.49 0.59 0.68 0.77 0.80
+## Proportion Explained  0.18 0.15 0.15 0.13 0.12 0.11 0.11 0.05
+## Cumulative Proportion 0.18 0.33 0.48 0.61 0.73 0.85 0.95 1.00
+## 
+## Mean item complexity =  1.9
+## Test of the hypothesis that 8 components are sufficient.
+## 
+## The root mean square of the residuals (RMSR) is  0.03 
+##  with the empirical chi square  942.19  with prob &lt;  1.8e-69 
+## 
+## Fit based upon off diagonal values = 1</code></pre>
+<p>We print out the communalities (sum of squared factor loadings for
+each variable) for all the variables, sorted in ascending order. The
+communality of a variable describes how much each factor, out of the
+extracted 8, contributes/explains the variance of this variable. So if
+the communality equals 1 then a complete replication of the variable can
+me obtained through the sole use of factors. In our case all variables
+have communalities below 1, so there is part of the variance that cannot
+be explained/modelled through factors. The lowest communalities are
+qd23,qd26,qd28.</p>
+<p>As previously done, we utilized the “varimax” rotation, which is
+designed to simplify the interpretation of the loadings. “Simplification
+of factors: maximize variance of squared factor loadings; when loadings
+close to 0 or close to 1, factor becomes easier to interpret.”</p>
+</div>
+<div id="principal-axis-factor-anlisys" class="section level4">
+<h4>Principal Axis Factor Anlisys:</h4>
+<p>PAF is an exploratory factor analysis method (or Factor Extraction
+Method), it attempts to find the least number of factors accounting for
+common variance of a set of variables. It uses a reduced correlation
+matrix, with a diagonal containing communalities (covariances).</p>
+<p>It assumes that the variance of the observed variables cannot be
+fully explained by the extracted factors, it decomposes the variance in
+communality and unique variance, without accounting for specific and
+error variability.</p>
+<pre class="r"><code># printing out the communalities
+PC1$communality %&gt;% kbl()</code></pre>
 <table>
 <thead>
 <tr>
 <th style="text-align:left;">
 </th>
 <th style="text-align:right;">
-sort.PC1.communality.
+x
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:left;">
-qd23
+qd1
 </td>
 <td style="text-align:right;">
-0.5482221
+0.8806015
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-qd28
+qd2
 </td>
 <td style="text-align:right;">
-0.6110891
+0.8341482
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-qd26
+qd3
 </td>
 <td style="text-align:right;">
-0.6253977
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd31
-</td>
-<td style="text-align:right;">
-0.6812121
+0.8318214
 </td>
 </tr>
 <tr>
@@ -2155,10 +2163,26 @@ qd4
 </tr>
 <tr>
 <td style="text-align:left;">
-qd16
+qd5
 </td>
 <td style="text-align:right;">
-0.7228627
+0.7758762
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd6
+</td>
+<td style="text-align:right;">
+0.8526109
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd7
+</td>
+<td style="text-align:right;">
+0.8480460
 </td>
 </tr>
 <tr>
@@ -2171,34 +2195,18 @@ qd8
 </tr>
 <tr>
 <td style="text-align:left;">
-qd18
+qd9
 </td>
 <td style="text-align:right;">
-0.7489624
+0.8712220
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-qd5
+qd10
 </td>
 <td style="text-align:right;">
-0.7758762
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd17
-</td>
-<td style="text-align:right;">
-0.7983085
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd32
-</td>
-<td style="text-align:right;">
-0.7991891
+0.8693608
 </td>
 </tr>
 <tr>
@@ -2219,10 +2227,18 @@ qd12
 </tr>
 <tr>
 <td style="text-align:left;">
-qd30
+qd13
 </td>
 <td style="text-align:right;">
-0.8130471
+0.8381954
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd14
+</td>
+<td style="text-align:right;">
+0.8803126
 </td>
 </tr>
 <tr>
@@ -2235,90 +2251,26 @@ qd15
 </tr>
 <tr>
 <td style="text-align:left;">
-qd21
+qd16
 </td>
 <td style="text-align:right;">
-0.8251173
+0.7228627
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-qd3
+qd17
 </td>
 <td style="text-align:right;">
-0.8318214
+0.7983085
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-qd2
+qd18
 </td>
 <td style="text-align:right;">
-0.8341482
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd13
-</td>
-<td style="text-align:right;">
-0.8381954
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd25
-</td>
-<td style="text-align:right;">
-0.8392376
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd7
-</td>
-<td style="text-align:right;">
-0.8480460
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd33
-</td>
-<td style="text-align:right;">
-0.8514121
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd6
-</td>
-<td style="text-align:right;">
-0.8526109
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd10
-</td>
-<td style="text-align:right;">
-0.8693608
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd9
-</td>
-<td style="text-align:right;">
-0.8712220
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd29
-</td>
-<td style="text-align:right;">
-0.8731078
+0.7489624
 </td>
 </tr>
 <tr>
@@ -2339,26 +2291,10 @@ qd20
 </tr>
 <tr>
 <td style="text-align:left;">
-qd27
+qd21
 </td>
 <td style="text-align:right;">
-0.8756005
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd14
-</td>
-<td style="text-align:right;">
-0.8803126
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qd1
-</td>
-<td style="text-align:right;">
-0.8806015
+0.8251173
 </td>
 </tr>
 <tr>
@@ -2371,27 +2307,97 @@ qd22
 </tr>
 <tr>
 <td style="text-align:left;">
+qd23
+</td>
+<td style="text-align:right;">
+0.5482221
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 qd24
 </td>
 <td style="text-align:right;">
 0.8966449
 </td>
 </tr>
+<tr>
+<td style="text-align:left;">
+qd25
+</td>
+<td style="text-align:right;">
+0.8392376
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd26
+</td>
+<td style="text-align:right;">
+0.6253977
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd27
+</td>
+<td style="text-align:right;">
+0.8756005
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd28
+</td>
+<td style="text-align:right;">
+0.6110891
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd29
+</td>
+<td style="text-align:right;">
+0.8731078
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd30
+</td>
+<td style="text-align:right;">
+0.8130471
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd31
+</td>
+<td style="text-align:right;">
+0.6812121
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd32
+</td>
+<td style="text-align:right;">
+0.7991891
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qd33
+</td>
+<td style="text-align:right;">
+0.8514121
+</td>
+</tr>
 </tbody>
 </table>
-<p>We print out the communalities (sum of squared factor loadings for
-each variable) for all the variables, sorted in ascending order. The
-communality of a variable describes how much each factor, out of the
-designed 7, contributes/explains the variance of this variable. So if
-the communality equals 1 then a complete replication of the variable can
-me obtained through the sole use of factors. In our case all variables
-have communalities below 1, so there is part of the variance that cannot
-be explained/modelled through factors. The lowest communalities are
-qd23,qd26,qd28.</p>
-<p>As previously done, we utilized the “varimax” rotation, which is
-designed to simplify the interpretation of the loadings. “Simplification
-of factors: maximize variance of squared factor loadings; when loadings
-close to 0 or close to 1, factor becomes easier to interpret.”</p>
+<p>There seem to be no variables with incredibly low communality
+measure, qd23 is slightly above 0.5, but it is not worrying in
+itself.</p>
 </div>
 <div id="total-variance-explained" class="section level4">
 <h4>total variance explained</h4>
@@ -2434,10 +2440,12 @@ Total_Variance_Explained </code></pre>
 ## [31,]  0.1288620  0.3904910      0.9932405
 ## [32,]  0.1156120  0.3503395      0.9967439
 ## [33,]  0.1074529  0.3256148      1.0000000</code></pre>
-<p>Total Variance: <span class="math inline">\(\begin{aligned}s^2_j&amp;=1=h^2_j+c^2_j+e^2_j\\&amp;=communality+specificity+measurament
+<p>Total Variance:</p>
+<p><span class="math inline">\(\begin{aligned}s^2_j&amp;=1=h^2_j+c^2_j+e^2_j\\&amp;=communality+specificity+measurament
 error\\&amp;=h^2_j+d^2_j\\&amp;=(1-d^2_j)+(c^2_j+e^2_j)\\&amp;=
-communality+uniqueness\end{aligned}\)</span> The 8 factors explain about
-80% of the total variance in the data.</p>
+communality+uniqueness\end{aligned}\)</span></p>
+<p>The 8 factors explain about 80% of the total variance in the
+data.</p>
 </div>
 <div id="loadings-for-all-variables" class="section level4">
 <h4>Loadings for all variables:</h4>
@@ -2625,10 +2633,18 @@ print(PC3_new$loadings, cutoff=0.3,sort=TRUE)</code></pre>
 discourse about what means what</em></p>
 </div>
 </div>
-<div id="what-do-the-eigenvalues-of-the-factorsquality-dimensions-tell-us" class="section level3">
+<div id="do-all-of-the-variables-in-your-final-solution-show-clear-loading-patterns" class="section level3">
+<h3>1.1 Do all of the variables in your final solution show clear
+loading patterns?</h3>
+</div>
+<div id="for-your-final-solution-run-a-principal-component-analysis-and-compare-the-results.-are-there-differences-to-your-solution-based-on-principal-axis-factoring" class="section level3">
+<h3>1.2 For your final solution run a principal component analysis and
+compare the results. Are there differences to your solution based on
+principal axis factoring?</h3>
+</div>
+<div id="what-do-the-eigenvalues-of-the-factorsquality-dimensions-tell-us-about-their-relevance-for-repurchase-behaviour" class="section level3">
 <h3>1.3 What do the eigenvalues of the factors/quality dimensions tell
-us</h3>
-<p>about their relevance for repurchase behaviour?</p>
+us about their relevance for repurchase behaviour?</h3>
 </div>
 <div id="exercise-2-oblique-factor-anlysis" class="section level3">
 <h3>Exercise 2: Oblique Factor Anlysis</h3>
