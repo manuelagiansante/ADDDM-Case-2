@@ -9,6 +9,9 @@ output:
       collapsed: false # toc does not collapse and is shown as a sidebar (toc_float)
     number_sections: true # document sections are numbered
     theme: cosmo
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 ```{r setup, include=FALSE}
@@ -26,9 +29,11 @@ library(psych)           # principal()
 library(kableExtra)      # kables for html
 # library(pastecs)
 # library(dplyr)
-library(psych)
 # library(rcompanion) 
-library(kableExtra)
+# library(GPArotation)
+# library(nFactors)
+# library(knitr)
+<<<<<<< HEAD
 ```
 
 We start by loading both data files.
@@ -50,6 +55,7 @@ We check for missing values.
 vis_miss(df1)
 ```
 
+<<<<<<< HEAD
 Since questions 22, 26, 28 and 29 contain missing values, we delete the corresponding rows.
 
 ```{r}
@@ -70,11 +76,18 @@ raqMatrix <- cor(df1)
 corrplot(raqMatrix)
 ```
 
+
 We can see some strong correlations, indicated by bigger and darker blue dots, between different questions. Furthermore, we notice that `qd4` and `qd23` seem to be the only two items with low correlations with all the other items. They are standalone items.
 
 ## Check whether the data set and all of its variables are suitable for factor analysis.
 
-A strong correlation between two variables is most likely a signal of redundancy. *from slides non molto ragionato* More precisely, there might be an underlying factor causing those variables to move the way that they move. A weaker correlation indicates that there are different factors affecting the variables. We list below the variables displaying higher correlation:
+A strong correlation between two variables is most likely a signal of redundancy.
+In regards to the correlation plot above, there are not very clear patterns, but we can observe some variables are highly correlated between one another, which is good since we want to perform a factor analysis.
+More precisely, we are interested in the underlying factors causing those variables to move the way that they move.
+A weaker correlation indicates that there are different factors affecting the variables, meaning they do not describe the same domain.
+
+
+Listed below are the variables displaying higher correlation, with a selected threshold of 0.65.
 
 
 ```{r}
@@ -128,20 +141,53 @@ df1[, 28:33] %>% gather() %>%
   labs(title = "Histograms of questions 28 to 33")
 ```
 
+To make sure that our data is suitable for Factor Analysis, we want to test to what extent our variables are correlated to one another.
+To further the analysis we measure the Sampling Adequacy based on the Kaiser-Meyer-Olking criterion:
 
 *copiato dall'esercizio in classe*
+=======
+```{r}
+#Kaiser-Meyer-Olkin Statistics
+KMOS(df1)
+```
+
+The KMO is a value that goes from 0 to 1, 1 indicating that all variables are suitable for factor analysis, 0 means that the correlations between the predictors are only due to the random error in the measurements.*idk if this sentence makes sense* 
+The measurement is computed with the following formula: 
+$MO_j=\frac{\sum_{i\neq j}r^2_{ij}}{\sum_{i \neq j} r^2_{ij}+\sum_{i\neq j}u}$ 
+where $r_{ij}$ is the correlation matrix, $u_{ij}$is the partial covariance matrix.
+
+Our KMO value amounts to 0.96 which satisfying (above 0.6), the variables are suitable for factor analysis.
+Qd4 displays a lower measure than all other variables, we must look out for it in the next steps, even if it is not included in the high correlation list.
 
 ```{r}
+# Anti-Image correlation matrix
+# we use the KMO function from the psych package
+KMO(df1)$ImCov %>% diag()%>% kbl()# only printing the diagonal
+
+
 kmo = KMOS(df1)
 kmo
 sort(kmo$MSA)
 ```
 
+The above printed diagonal of the Anti-Image-Correlation-Matrix, the anti-image measures the portion of a variable's variance that cannot be explained by other variable. In our case there are some below 0.5 values indicating that some topics have not been sufficiently covered in the questionnaire.
+
+Another way to judge whether our data is suitable for factor analysis would be the **Bartlett's test**.The null hypothesis of this test is that the sample originates from a population, where all variables are uncorrelated, or in other words the correlation matrix equals the identity matrix.
+The test is more suited for cases in which each variable has less than 5 observations, because it is very sensitive within large sample it might not be a good fit for us.
+
 ```{r}
+# l ho fatto ma possiamo anche toglierlo imo
+#Bartlett's Test of Sphericity
 bart_spher(df1)
 ```
 
+
 #### Principal Component Analysis 1
+
+The test results highly significant, we can reject the null hypothesis, the data is fit for factor analysis.
+
+
+#### Exploratory principal analysis
 
 ```{r}
 PC0 <- principal(df1, rotate="varimax", scores=TRUE)
@@ -156,7 +202,14 @@ ggplot(mapping = aes(x = 1:33, y = PC0$values)) +
        title = "Scree plot")
 ```
 
+
 We have 8 eigenvalues which are bigger than 1. Thus, we redo a principal components analysis with 8 factors.
+
+The Eigenvalues are plotted above, the horizontal line represents the significance threshold.
+After the first value there is a very steep drop, followed by a slower decline.
+The point above the significance level(and above the "elbow") are around 7 or 8.
+
+We attempt at retaining 8 factors:
 
 ```{r}
 PC1 <- principal(df1, rotate="varimax", nfactors=8, scores=TRUE)
@@ -164,17 +217,58 @@ PC1_communalities=data.frame(sort(PC1$communality))
 PC1_communalities %>% kbl()
 ```
 
+
+
+We print out the communalities (sum of squared factor loadings for each variable) for all the variables, sorted in ascending order.
+The communality of a variable describes how much each factor, out of the extracted 8, contributes/explains the variance of this variable.
+So if the communality equals 1 then a complete replication of the variable can me obtained through the sole use of factors.
+In our case all variables have communalities below 1, so there is part of the variance that cannot be explained/modelled through factors.
+The lowest communalities are qd23,qd26,qd28.
+
+As previously done, we utilized the "varimax" rotation, which is designed to simplify the interpretation of the loadings.
+"Simplification of factors: maximize variance of squared factor loadings; when loadings close to 0 or close to 1, factor becomes easier to interpret."
+
+#### Principal Axis Factor Analysis:
+
+PAF is an exploratory factor analysis method (or Factor Extraction Method), it attempts to find the least number of factors accounting for common variance of a set of variables.
+It uses a reduced correlation matrix, with a diagonal containing communalities (covariances).
+
+It assumes that the variance of the observed variables cannot be fully explained by the extracted factors, it decomposes the variance in communality and unique variance, without accounting for specific and error variability.
+
+```{r}
+# printing out the communalities
+PC1$communality %>% kbl()
+
+```
+
+There seem to be no variables with incredibly low communality measure, qd23 is slightly above 0.5, but it is not worrying in itself.
+
 #### total variance explained
 
 *I honeslty have no clue where this is going sorry*
+
+
 
 ```{r}
 EigenValue=PC1$values
 Variance=EigenValue/ncol(subset(df1))*100
 SumVariance=cumsum(EigenValue/ncol(subset(df1)))
 Total_Variance_Explained=cbind(EigenValue=EigenValue[EigenValue>0],Variance=Variance[Variance>0],Total_Variance=SumVariance[Variance>0])
-Total_Variance_Explained %>% kbl()
+Total_Variance_Explained 
 ```
+
+
+Total Variance:
+
+$\begin{aligned}s^2_j&=1=h^2_j+c^2_j+e^2_j\\&=communality+specificity+measurament error\\&=h^2_j+d^2_j\\&=(1-d^2_j)+(c^2_j+e^2_j)\\&= communality+uniqueness\end{aligned}$
+
+The 8 factors explain about 80% of the total variance in the data.
+
+#### Loadings for all variables:
+
+$Loadings= Eigenvectors\times\sqrt{Eigenvalues}$ The loadings measure the correlation between the variables and the factors.
+Their signs indicated the direction of the relationship with the factors, the values the strength of such relationship.
+
 
 ```{r}
 print(PC1$loadings, cutoff=0.3,sort=TRUE)
@@ -182,27 +276,40 @@ print(PC1$loadings, cutoff=0.3,sort=TRUE)
 # than se confronts it with the communalities and from there she decides which ones to eliminate
 ```
 
+
 qd26 low on rc7 qd7,qd8 low on rc5
 
 #### principal analysis2 (for the last standing)
+=======
+
+As anticipated by the communalites qd26 is low on rc3 (factor 3).
+Further more, qd28 and qd8 are low on rc1.
+The other display quite clear patterns *insert a summary of the "clusters"*
+
+#### Principal Analysis with filtered variables:
+
 
 ```{r}
-# for now i put in just the ones that look out of pattern
-PC2 <- psych::principal(subset(df1, select = c(qd1:qd6,qd9:qd25,qd27:qd33)), rotate="varimax", scores=TRUE)
+PC2 <- psych::principal(subset(df1, select = c(qd1:qd7,qd9:qd25,qd27,qd29:qd33)), rotate="varimax", scores=TRUE)
 
 plot(PC2$values,xlab="Factor Number",ylab="Eigenvalue",main="Scree plot",cex.lab=1.2,cex.axis=1.2,cex.main=1.8)+abline(h=1)
 ```
+
+
+The Scree plots suggests the same number of factors.
+
 
 ```{r}
 #idk if we should changed the names
 # maybe even find a function that does this on its own
 EigenValue=PC2$values
-Variance=EigenValue/ncol(subset(df1, select = c(qd1:qd6,qd9:qd25,qd27:qd33)))*100
-SumVariance=cumsum(EigenValue/ncol(subset(df1, select = c(qd1:qd6,qd9:qd25,qd27:qd33))))
+Variance=EigenValue/ncol(subset(df1, select = c(qd1:qd7,qd9:qd25,qd27,qd29:qd33)))*100
+SumVariance=cumsum(EigenValue/ncol(subset(df1, select = c(qd1:qd7,qd9:qd25,qd27,qd29:qd33))))
 Total_Variance_Explained2=cbind(EigenValue=EigenValue[EigenValue>0],Variance=Variance[Variance>0],Total_Variance=SumVariance[Variance>0])
 Total_Variance_Explained2
 ```
 
+<<<<<<< HEAD
 we try between 6 and 7 to see if the loadings look better
 
 ```{r}
@@ -212,13 +319,41 @@ print(PC3_6$loadings, cutoff=0.3,sort=TRUE)
 
 it does not look nice
 
+The variance explained has increased to 83%.
+
+
 ```{r}
-PC3_7 <- psych::principal(subset(df1, select = c(qd1:qd6,qd9:qd25,qd27:qd33)), rotate="varimax",nfactors=7, scores=TRUE)
-print(PC3_7$loadings, cutoff=0.3,sort=TRUE)
+PC3 <- psych::principal(subset(df1, select = c(qd1:qd7,qd9:qd25,qd27,qd29:qd33)), rotate="varimax",nfactors=8, scores=TRUE)
+print(PC3$loadings, cutoff=0.3,sort=TRUE)
 ```
+
+
+We try and see if removing dq6 and qd31 helps:
+
+```{r}
+PC3_new <- psych::principal(subset(df1, select = c(qd1:qd5,qd7,qd9:qd25,qd27,qd29:qd30,qd32,qd33)), rotate="varimax",nfactors=8, scores=TRUE)
+print(PC3_new$loadings, cutoff=0.3,sort=TRUE)
+```
+
+It does not, our final selection is `c(qd1:qd7,qd9:qd25,qd27,qd29:qd33)` *should add the whole discourse about what means what*
+
+### 1.1 Do all of the variables in your final solution show clear loading patterns?
+
+### 1.2 For your final solution run a principal component analysis and compare the results. Are there differences to your solution based on principal axis factoring?
+
 
 *i honestly do not get why she did this, its literally pc2 called different, even tho for ours looks we might need to rethink how many we are taking away* *do regression with factor scores???? do we even have a y?*
 
-\`
+
 
 # Oblique Factor Analysis
+
+### 1.3 What do the eigenvalues of the factors/quality dimensions tell us about their relevance for repurchase behaviour?
+
+### Exercise 2: Oblique Factor Anlysis
+
+```{r}
+
+```
+
+
