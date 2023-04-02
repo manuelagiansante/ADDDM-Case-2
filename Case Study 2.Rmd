@@ -221,7 +221,7 @@ The number of underlying factors has to be specified inside the function. If we 
 
 Those criterias are:
 
-- `fit`, which measures ow well the factor model reproduces the correlation matrix;
+- `fit`, which measures how well the factor model reproduces the correlation matrix;
 - `objective`, which is the value of the function that is minimized by a maximum likelihood procedure;
 - `rms`, which is the sum of the squared off-diagonal residuals divided by the degrees of freedom;
 - `crms`, which is the RMS adjusted for degrees of freedom;
@@ -246,6 +246,8 @@ for (i in 1:13) {
   fit_df[i, 5] <- FA$TLI
   fit_df[i, 6] <- FA$BIC
 }
+
+rm(i, FA)
 ```
 
 Now, we can plot the values of each criteria with respect to the number of factors.
@@ -327,6 +329,15 @@ Some people answering might consider not only extra features but any features of
 
 In model `FA9`, loadings of `qd4` and `qd23` on their factor are the weakest of all "main" loadings. This could indicate that keeping `qd4` and `qd23` might not be totally appropriate and is up to discussion.
 
+When looking at the communalities of our models, we get the following results:
+
+```{r PAF communalities}
+sort(FA8_423$communality)
+sort(FA9$communality)
+```
+
+This further indicates that questions 4 and 23 might not be appropriate in for factor analysis, as their communalities inside `FA9` are extremely low. The communality of an item is the sum of the squared factor loadings for that item. It measures the proportion of the item's variance that can be explained by the underlying factors.
+
 We observe the scree plots of our two models.
 
 ```{r PAF scree plots}
@@ -361,11 +372,104 @@ After reviewing all the information we gathered about our model, we decide to ke
 
 Questions 4 and 23 Showed very little correlation with each other and even if they should theoretically represent the same construct of distinctiveness and prestige, the construct was not explored enough through questions in the survey. Every other construct had between 3 and 5 questions and the questions exhibit high correlations when they are in the same group.
 
-Furthermore, the BIC is lowest for 8 factors and starts slowly rising again once we get past 8. The loadings of `qd4` and `qd23` in the `FA9` model remain lower than all other loadings of items inside their construct, being even lower than 0.5. When we looked at the anti-image correlation matrix diagonal, the proportions of unique variance in questions 4 and 23 were dominating the rest, indicating that the rest of the data set cannot explain most of their variance.
+Furthermore, the BIC is lowest for 8 factors and starts slowly rising again once we get past 8. The loadings of `qd4` and `qd23` in the `FA9` model remain lower than all other loadings of items inside their construct, being even lower than 0.5. When we looked at the anti-image correlation matrix diagonal, the proportions of unique variance in questions 4 and 23 were dominating the rest, indicating that the rest of the data set cannot explain most of their variance. Moreoever, their communalities were very low in `FA9`.
 
 These reasons combined made us choose model `FA8_423`. Its constructs are the ones we listed when we inspected the correlation matrix (except of course the constructs of questions 4 and 23). The loading patterns of `FA8_423`, as we discussed in the previous point, are clear.
 
-## Run a principal component analysis and compare the results.
+## Run a principal component analysis (PCA) and compare the results.
+
+Like with PAF, we run models with number of components ranging from 1 to 33 and will examine some criteria to get an idea of which ones best fit our data.
+
+For PCA, the criteria are:
+
+- `fit`, which measures how well the components model reproduces the correlation matrix;
+- `fit.off`, which measures how well the off-diagonal elements of the correlation matrix are reproduced;
+- `objective`, which is the value of the function that is minimized by a maximum likelihood procedure;
+- `rms`, which is the sum of the squared off-diagonal residuals divided by the degrees of freedom.
+
+
+```{r PCA best nfactor}
+# we initiate and empty dataframe which will record our criteria values
+fit_df <- matrix(nrow = 33, ncol = 4)
+colnames(fit_df) <- c("fit", "fit.off", "objective", "rms")
+fit_df <- as.data.frame(fit_df)
+
+# we compute the factor analysis for nfactors between 1 and 13 and record criteria results in fit_df
+for (i in 1:33) {
+  PCA <- principal(df1, nfactors = i, rotate = "varimax")
+  fit_df[i, 1] <- PCA$fit
+  fit_df[i, 2] <- PCA$fit.off
+  fit_df[i, 3] <- PCA$objective
+  fit_df[i, 4] <- PCA$rms
+}
+
+rm(i, PCA)
+```
+
+We plot the results like before.
+
+```{r PCA plots of criteria}
+fit_df %>% gather() %>%                 
+  ggplot(aes(x = rep(1:33, ncol(fit_df)), y = value)) +
+  facet_wrap(~ key, scales = "free") +
+  geom_point() +
+  theme_classic() +
+  scale_x_continuous(breaks = seq(1, 33, 2)) +
+  geom_vline(xintercept = 10, linetype = "dashed") +
+  labs(title = "Various criteria for Principal Component Analysis",
+       x = "Number of components",
+       y = "")
+```
+
+Here, the ideal number of components seems to be 10, indicated by a dashed line. It is a local minimum of the objective function and is at thw elbow of the other three curves.
+
+However, we check if this result would vary by omitting standalone variables `qd4` and `qd23`.
+
+```{r PCA best nfactor 423}
+# we initiate and empty dataframe which will record our criteria values
+fit_df <- matrix(nrow = 31, ncol = 4)
+colnames(fit_df) <- c("fit", "fit.off", "objective", "rms")
+fit_df <- as.data.frame(fit_df)
+
+# we compute the factor analysis for nfactors between 1 and 13 and record criteria results in fit_df
+for (i in 1:31) {
+  PCA <- principal(df1[, -c(4,23)], nfactors = i, rotate = "varimax")
+  fit_df[i, 1] <- PCA$fit
+  fit_df[i, 2] <- PCA$fit.off
+  fit_df[i, 3] <- PCA$objective
+  fit_df[i, 4] <- PCA$rms
+}
+
+rm(i, PCA)
+```
+
+Again, we plot the evolution of the criteria.
+
+```{r PCA plots of criteria 423}
+fit_df %>% gather() %>%                 
+  ggplot(aes(x = rep(1:31, ncol(fit_df)), y = value)) +
+  facet_wrap(~ key, scales = "free") +
+  geom_point() +
+  theme_classic() +
+  scale_x_continuous(breaks = seq(1, 31, 2)) +
+  geom_vline(xintercept = 8, linetype = "dashed") +
+  labs(title = "Various criteria for Principal Component Analysis without qd4 and qd23",
+       x = "Number of components",
+       y = "")
+```
+
+Without questions 4 and 23, the best model seems to be the one with 8 components.
+
+Thus, we will test these two models.
+
+```{r}
+PCA <- principal(df1[, -c(4, 23)], nfactors = 8, rotate = "varimax")
+sort(PCA$communality)
+# print(PCA$loadings, cutoff = 0.3, sort = TRUE)
+PCA <- principal(df1, nfactors = 10, rotate = "varimax")
+sort(PCA$communality)
+# print(PCA$loadings, cutoff = 0.3, sort = TRUE)
+```
 
 ```{r}
 PC0 <- principal(df1, rotate="varimax", scores=TRUE)
