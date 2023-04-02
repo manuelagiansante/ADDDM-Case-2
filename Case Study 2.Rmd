@@ -18,15 +18,15 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.align = "center")
 ```
 
-```{r message=FALSE, warning= FALSE}
-library(data.table)
+```{r packages}
+library(data.table)      # data.table type
+library(tidyr)           # gather()
+library(kableExtra)      # kables for html document
 library(naniar)          # vis_miss()
 library(corrplot)        # corrplot()
 library(caret)           # findCorrelation()
-library(REdaS)           # KMOS()
-library(tidyr)           # gather()
-library(psych)           # principal()
-library(kableExtra)      # kables for html
+library(REdaS)           # KMOS(), bart_spher()
+library(psych)           # KMO(), fa(), principal()
 # library(pastecs)
 # library(dplyr)
 # library(rcompanion) 
@@ -37,48 +37,47 @@ library(kableExtra)      # kables for html
 
 We start by loading both data files.
 
-```{r}
+```{r reading data}
 descriptions <- fread("Data File_Case Study_Factor Analysis_Variables.csv")
 df <- read.csv("Data File_Case_Study_Factor Analysis_MD.csv")
 ```
 
 We select only the relevant columns which correspond to question numbers `qd1` to `qd33` inside `df`.
 
-```{r}
+```{r selecting questions}
 df1 <- df[,c(9:41)]
 ```
 
 We check for missing values.
 
-```{r}
+```{r missing values 1}
 vis_miss(df1)
 ```
 
 Since questions 22, 26, 28 and 29 contain missing values, we delete the corresponding rows.
 
-```{r}
+```{r missing values 2}
 df1 <- na.omit(df1)
 vis_miss(df1)
 ```
 
 Now, our data frame `df1` has no more missing values.
 
-**Lucia comment: what does this sentence mean?** - how many are the requited case
 
 # Orthogonal Factor Analysis
 
 ## Inspect the correlation matrix.
 
-```{r}
+We compute the correlation matrix and plot it.
+
+```{r cormat}
 raqMatrix <- cor(df1)
-corrplot(raqMatrix)
+corrplot(raqMatrix, tl.cex = 0.8)
 ```
 
 We can see some strong correlations, indicated by bigger and darker blue dots, between different questions.
 Furthermore, we notice that `qd4` and `qd23` seem to be the only two items with low correlations with all the other items.
 They are standalone items.
-
-## Check whether the data set and all of its variables are suitable for factor analysis.
 
 A strong correlation between two variables is most likely a signal of redundancy.
 In regards to the correlation plot above, there are not very clear patterns, but we can observe some variables are highly correlated between one another, which is good since we want to perform a factor analysis.
@@ -87,7 +86,7 @@ A weaker correlation indicates that there are different factors affecting the va
 
 Listed below are the variables displaying higher correlation, with a selected threshold of 0.65.
 
-```{r}
+```{r high cors loop}
 n = nrow(raqMatrix)
 for (i in 1:(n-1)) {
   for (j in (i+1):n) {
@@ -104,11 +103,35 @@ for (i in 1:(n-1)) {
 rm(i, j, n)
 ```
 
-```{r}
+This allows us to separate the questionnaire items into clusters by grouping together variables which are highly correlated.
+We can obtain exactly the same groups by using the `hclust` option when plotting the correlation matrix.
+Rows and columns are swapped so items who are highly correlated can be side by side.
+
+```{r cormat clusters}
 corrplot(raqMatrix, order = 'hclust', tl.cex = 0.8, addrect = 10)
 ```
 
-```{r}
+The clustering of the correlation matrix with 10 clusters and our grouping with threshold at 0.65 give the same results.
+We get the following 10 different groups:
+
+-   Items 1, 10, 20 and 27, all related to aesthetics;
+-   Items 2, 5, 7, 12 and 16, all related to performance;
+-   Items 3, 11, 13 and 30, all related to ease of use;
+-   Items 6, 8, 18 and 25, all related to features;
+-   Items 9, 14, 19, 21 and 24, all related to serviceability;
+-   Items 15, 17 and 32, all related to quality of materials;
+-   Items 22, 29 and 33, all related to flawlessness;
+-   Items 26, 28 and 31, all related to durability;
+-   Item 4, related to distinctiveness;
+-   Item 23, related to prestige.
+
+This grouping is quite close to quality dimensions defined in the literature (see Table 1 of the assignment pdf).
+The differences would be the presence of a construct about the quality of materials, which is not listed in the dimensions of quality, and the fact that questions 4 and 23 should reflect the same underlying construct, "Distinctiveness/Prestige", but it does not seem to be the case from experimental data, as the two variables are very weekly correlated.
+
+## Check whether the data set and all of its variables are suitable for factor analysis.
+
+```{r histograms, eval=FALSE, include=FALSE}
+# idk if we want to check all the distributions
 df1[, 1:9] %>% gather() %>%                 
   ggplot(aes(value)) +
   facet_wrap(~ key, scales = "free") +
@@ -139,47 +162,210 @@ df1[, 28:33] %>% gather() %>%
 ```
 
 To make sure that our data is suitable for Factor Analysis, we want to test to what extent our variables are correlated to one another.
-To further the analysis we measure the Sampling Adequacy based on the Kaiser-Meyer-Olking criterion:
+To further the analysis we measure the Sampling Adequacy based on the **Kaiser-Meyer-Olking criterion**:
 
-```{r}
+```{r KMO}
 #Kaiser-Meyer-Olkin Statistics
-KMOS(df1)
+KMO(df1)
 ```
 
 The KMO test measures the proportion of variance between variables which can be attributed to common variance.
 It takes values between 0 and 1, meaning that higher values of the test indicate that a variable is suitable for factor analysis.
-The measurement is computed with the following formula: $MO_j=\frac{\sum_{i\neq j}r^2_{ij}}{\sum_{i \neq j} r^2_{ij}+\sum_{i\neq j}p^2_{ij}}$ where $r_{ij}$ is the correlation coefficient of the variables indexed by $i$ and $j$, and $p_{ij}$ is the partial correlation coefficient of those variables.
+The measurement is computed with the following formula: $$MO_j=\frac{\sum_{i\neq j}r^2_{ij}}{\sum_{i \neq j} r^2_{ij}+\sum_{i\neq j}p^2_{ij}}$$ where $r_{ij}$ is the correlation coefficient of the variables indexed by $i$ and $j$, and $p_{ij}$ is the partial correlation coefficient of those variables.
 
 Our KMO mean value amounts to 0.96 which indicates that in average variables are well suited for factor analysis.
 The individual MSA values of variables except for `qd4` are all above 0.9, which corresponds to "marvelous" in correspondence with Kaiser's nomenclature.
 The value of `qd4` is considered as "mediocre".
 We must look out for it in the next steps.
 
-```{r}
-# Anti-Image correlation matrix
-# we use the KMO function from the psych package
-data.frame(colnames(df1),
-           diag(KMO(df1)$ImCov)) %>%
-  kbl(col.names = c("Question", "Unique variance proportion"), align =c('r', 'r'))
+We will also take a look at the diagonal of the anti-image correlation matrix.
+This gives us the proportion of a variable's variance that cannot be explained by any other variable.
+
+```{r anti-image cormat}
+# we use the KMO function from the psych package to retrieve the anti-image cor mat
+anti_mat_diag = data.frame("Question" = 1:33,
+                           "UniqueVar" = diag(KMO(df1)$ImCov))
+
+ggplot(data = anti_mat_diag, aes(x = Question, y = UniqueVar)) +
+  geom_col() +
+  theme_classic() +
+  scale_x_continuous(breaks = seq(1, 33, 1)) +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(title = "Diagonal values of anti-image correlation matrix",
+       y = "Proportion of unique variance")
+
+rm(anti_mat_diag)
 ```
 
-The above printed diagonal of the Anti-Image-Correlation-Matrix, the anti-image measures the portion of a variable's variance that cannot be explained by other variable.
-In our case there are some above 0.5 values indicating that some topics have not been sufficiently covered in the questionnaire.
+In our case, `qd4` and `qd23` have values above 0.5, indicating that their topics have not been sufficiently covered in the questionnaire.
+They clearly result as outliers compared to all the other variables.
 
-Another way to judge whether our data is suitable for factor analysis would be the **Bartlett's test**.The null hypothesis of this test is that the sample originates from a population, where all variables are uncorrelated, or in other words the correlation matrix equals the identity matrix.
-The test is more suited for cases in which each variable has less than 5 observations, because it is very sensitive within large sample it might not be a good fit for us.
+Another way to judge whether our data is suitable for factor analysis would be **Bartlett's test**.
+The null hypothesis of this test is that the sample originates from a population, where all variables are uncorrelated, or in other words that the correlation matrix equals the identity matrix.
+The test is more suited for cases in which each variable has less than 5 observations, because it is very sensitive within large samples and thus might not be a good fit for us.
 
-The test results highly significant, we can reject the null hypothesis, the data is fit for factor analysis.
+The test results highly significant, meaning we can reject the null hypothesis, the data is fit for factor analysis.
 
-```{r}
-# l ho fatto ma possiamo anche toglierlo imo
-#Bartlett's Test of Sphericity
+```{r bartlett test}
 bart_spher(df1)
 ```
 
-#### Principal Component Analysis 1
+After having considered all the above elements, this data set looks suitable for factor analysis.
+The only two items we need to pay special attention to are `qd4` and `qd23`, as they might not be as well suited as the rest.
 
-#### Exploratory principal analysis
+## Run principal axis factoring (PAF) and use varimax rotation.
+
+Principal axis factoring is implemented with the `fa` function from `psych` package.
+
+The number of underlying factors has to be specified inside the function. If we try to input a number of factors greater than 13, `fa` returns an error. Thus, we test options for models going from 1 factor to 13 and record each time some criteria aimed at helping select the best model.
+
+Those criterias are:
+
+- `fit`, which measures ow well the factor model reproduces the correlation matrix;
+- `objective`, which is the value of the function that is minimized by a maximum likelihood procedure;
+- `rms`, which is the sum of the squared off-diagonal residuals divided by the degrees of freedom;
+- `crms`, which is the RMS adjusted for degrees of freedom;
+- `TLI`, which is the Tucker Lewis Index of factoring reliability;
+- `BIC`, which is the Bayesian information criterion.
+
+A good model exhibits high values of `fit` and `TLI`, and low values of the others.
+
+```{r PAF best nfactor}
+# we initiate and empty dataframe which will record our criteria values
+fit_df <- matrix(nrow = 13, ncol = 6)
+colnames(fit_df) <- c("fit", "objective", "rms", "crms", "TLI", "BIC")
+fit_df <- as.data.frame(fit_df)
+
+# we compute the factor analysis for nfactors between 1 and 13 and record criteria results in fit_df
+for (i in 1:13) {
+  FA <- fa(df1, nfactors = i, rotate = "varimax", fm = "pa")
+  fit_df[i, 1] <- FA$fit
+  fit_df[i, 2] <- FA$objective
+  fit_df[i, 3] <- FA$rms
+  fit_df[i, 4] <- FA$crms
+  fit_df[i, 5] <- FA$TLI
+  fit_df[i, 6] <- FA$BIC
+}
+```
+
+Now, we can plot the values of each criteria with respect to the number of factors.
+
+```{r PAF plots of criteria}
+fit_df %>% gather() %>%                 
+  ggplot(aes(x = rep(1:13, ncol(fit_df)), y = value)) +
+  facet_wrap(~ key, scales = "free") +
+  geom_point() +
+  theme_classic() +
+  scale_x_continuous(breaks = seq(1, 13, 1)) +
+  geom_vline(xintercept = 8, linetype = "dashed") +
+  geom_vline(xintercept = 9, linetype = "dashed") +
+  labs(title = "Various criteria for Principal Axis Factoring",
+       x = "Number of factors",
+       y = "")
+```
+
+The dashed lines designate the number of factors which seem the most appropriate for our data. The improvement in criteria for numbers of factors greater than 9 is much slower and less significant. Depending on the criterion, we would choose 8 or 9, so we will test both models with and without including questions 4 and 23, since our exploratory analysis of the data indicated that those two variables probably will not be loaded onto factors, as they are standalone.
+
+
+```{r PAF candidate models}
+FA8 <- fa(df1, nfactors = 8, rotate = "varimax", fm = "pa")
+FA8_423 <- fa(df1[, -c(4, 23)], nfactors = 8, rotate = "varimax", fm = "pa")
+FA9 <- fa(df1, nfactors = 9, rotate = "varimax", fm = "pa")
+FA9_423 <- fa(df1[, -c(4, 23)], nfactors = 9, rotate = "varimax", fm = "pa")
+```
+
+We examine the factor loadings of each model, using a plot similar to the correlation plot to quickly visualize them.
+
+```{r PAF loadings viz}
+par(mfrow = c(2,2))
+corrplot(t(FA8$loadings),
+         tl.cex = 0.7,
+         title = "PAF with 8 factors \n Loadings",
+         mar = c(0, 1, 3, 0))
+corrplot(t(FA8_423$loadings),
+         tl.cex = 0.7,
+         title = "PAF with 8 factors excluding qd4 and qd23 \n Loadings",
+         mar = c(0, 1, 3, 0))
+corrplot(t(FA9$loadings),
+         tl.cex = 0.7,
+         title = "PAF with 9 factors \n Loadings",
+         mar = c(0, 1, 3, 0))
+corrplot(t(FA9_423$loadings),
+         tl.cex = 0.7,
+         title = "PAF with 9 factors excluding qd4 and qd23 \n Loadings",
+         mar = c(0, 1, 3, 0))
+par(mfrow = c(1,1))
+```
+
+We remark the following:
+
+- In `FA8`, questions 4 and 23 aren't loaded on any factor. Each other variable is clearly loaded on a unique factor.
+- In `FA8_423`, each variable is clearly loaded on one factor like before, since we deleted the two variables which weren't associated on any of the 8 factors. If we decide to keep a model with 8 factors, we could delete `qd4` and `qd23` as they will not be loaded onto a factor in any case.
+- In `FA9`, questions 4 and 23 are loaded onto one factor together and all other variables are loaded on one of the 8 other factors. The loadings of `qd4` and `qd23` are the lowest however, at 0.414 and 0.474 respectively.
+- In `FA9_423`, the ninth factor has no variable loaded on it, as we have deleted questions 4 and 23 and the other items are arranged on 8 factors. This model is not appropriate for the data and should be discarded.
+
+In summary, there are two possible models:
+
+- A model with 8 factors which does not include `qd4` and `qd23`;
+- A model with 9 factors in which `qd4` and `qd23` are loaded onto a factor together.
+
+We discard `FA8` and `FA9_423` and display the numerical loadings greater than 0.3 of the two remaining models.
+
+```{r PAF loadings for 2 models}
+rm(FA8, FA9_423)
+
+print(FA8_423$loadings, cutoff = 0.3, sort = TRUE)
+print(FA9$loadings, cutoff = 0.3, sort = TRUE)
+```
+
+We notice that the factors created by PAF are the same groups we identified with our clustering of the correlation matrix. In both models, `qd8`, which was grouped with the features construct, is partially loaded onto factor PA1, which corresponds to the performance construct. We fetch its description.
+
+```{r qd8 descr}
+descriptions[name %in% "qd8", ]
+```
+Some people answering might consider not only extra features but any features of their smartphone and evaluate their performance, i.e. how they function. This might explain why `qd8` is partially loaded onto the performance construct. However, it remains mainly loaded onto the features construct, with a value of 0.558 or 0.559 according to the model.
+
+In model `FA9`, loadings of `qd4` and `qd23` on their factor are the weakest of all "main" loadings. This could indicate that keeping `qd4` and `qd23` might not be totally appropriate and is up to discussion.
+
+We observe the scree plots of our two models.
+
+```{r PAF scree plots}
+ggplot(mapping = aes(x = 1:length(FA8_423$values),
+                     y = FA8_423$values,
+                     color = (FA8_423$values >= 1))) +
+  geom_point() +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  theme_classic() +
+  labs(title = "Scree plot of FA8_423",
+       x = "Factor Number",
+       y = "Eigenvalue",
+       color = "Eigenvalue >= 1")
+
+ggplot(mapping = aes(x = 1:length(FA9$values),
+                     y = FA9$values,
+                     color = (FA9$values >= 1))) +
+  geom_point() +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  theme_classic() +
+  labs(title = "Scree plot of FA9",
+       x = "Factor Number",
+       y = "Eigenvalue",
+       color = "Eigenvalue >= 1")
+```
+
+If we would only select based on the eigenvalues bigger than 1, then our model would have only 5 factors. However, due to all our previous analysis, this does not seem to be the best choice. The elbow rule would probably cut at 8 factors for `FA8_423`, as there is a bigger gap between 8 and 9. However, `FA9` does not have such a gap and the descent is quite smooth, so it is more difficult to determine.
+
+## Decide on a final principal factor analysis solution.
+
+After reviewing all the information we gathered about our model, we decide to keep `FA8_423` over `FA9`.
+
+Questions 4 and 23 Showed very little correlation with each other and even if they should theoretically represent the same construct of distinctiveness and prestige, the construct was not explored enough through questions in the survey. Every other construct had between 3 and 5 questions and the questions exhibit high correlations when they are in the same group.
+
+Furthermore, the BIC is lowest for 8 factors and starts slowly rising again once we get past 8. The loadings of `qd4` and `qd23` in the `FA9` model remain lower than all other loadings of items inside their construct, being even lower than 0.5. When we looked at the anti-image correlation matrix diagonal, the proportions of unique variance in questions 4 and 23 were dominating the rest, indicating that the rest of the data set cannot explain most of their variance.
+
+These reasons combined made us choose model `FA8_423`. Its constructs are the ones we listed when we inspected the correlation matrix (except of course the constructs of questions 4 and 23). The loading patterns of `FA8_423`, as we discussed in the previous point, are clear.
+
+## Run a principal component analysis and compare the results.
 
 ```{r}
 PC0 <- principal(df1, rotate="varimax", scores=TRUE)
@@ -217,6 +403,8 @@ The lowest communalities are qd23,qd26,qd28.
 
 As previously done, we utilized the "varimax" rotation, which is designed to simplify the interpretation of the loadings.
 "Simplification of factors: maximize variance of squared factor loadings; when loadings close to 0 or close to 1, factor becomes easier to interpret."
+
+## Exploratory principal component analysis
 
 #### Principal Axis Factor Analysis:
 
