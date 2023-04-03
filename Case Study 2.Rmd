@@ -468,11 +468,12 @@ fit_df %>% gather() %>%
 
 Without questions 4 and 23, the best model seems to be the one with 8 components.
 
-Thus, we will test these two models.
+Thus, we will test these three models.
 
 ```{r PCA models}
 PCA8_423 <- principal(df1[, -c(4, 23)], nfactors = 8, rotate = "varimax")
 PCA10 <- principal(df1, nfactors = 10, rotate = "varimax")
+PCA8<-principal(df1, nfactors=8, rotate = "varimax")
 ```
 
 We examine the factor loadings, first by plotting them.
@@ -486,6 +487,10 @@ corrplot(t(PCA10$loadings),
          tl.cex = 0.7,
          title = "CPA with 10 factors \n Loadings",
          mar = c(1, 1, 3, 0))
+corrplot(t(PCA8$loadings),
+         tl.cex = 0.7,
+         title="CPA with 8 factors including qd4 and dq23 \n Loadingd",
+         mar = c(1,1,3,0))
 ```
 In both models, each questions looks strongly loaded onto one component. In `PCA_423`, question 4 and 23 each have their own component and their loadings are the strongest ones, in opposition to what we observed for PAF.
 
@@ -494,19 +499,23 @@ We take a look at the numerical values of the loadings, displaying only the ones
 ```{r PCA loadings}
 print(PCA8_423$loadings, cutoff = 0.3, sort = TRUE)
 print(PCA10$loadings, cutoff = 0.3, sort = TRUE)
+print(PCA8$loadings, cutoff = 0.3, sort=TRUE)
 ```
 
 
 Like with PAF, we notice that `qd8` is partially loaded onto the component corresponding to performance. However, compared with PAF, the loadings are globally slightly higher. The loadings of questions 4 and 23 are extremely high for `PCA10`.
+The loadings for the PCA8 has a lot of variables with low loadings, which does not seem to be the best option, given that comparatively the other models look much nicer.
 
 We take a look at the communalities.
 
 ```{r PCA communalities}
 sort(PCA8_423$communality)
 sort(PCA10$communality)
+sort(PCA8$communality)
 ```
 
 Unlike with PAF, the underlying components in our model, which are dedicated to `qd4` and `qd23`, explain most of the variance of the two variables. This gives both models high communalities for all variables, with the lowest values being around 0.73.
+The communalities for PCA8 are low for many of the variables, we decide to not move further with this model.
 
 We display the scree plots.
 
@@ -554,7 +563,7 @@ kable(TVE_PCA8_423, col.names = c("Component",
    kable_styling(full_width = TRUE)
 ```
 
-Thus, with 8 factors the percentage of the total variance explained is 84.11%.
+Thus, with 8 factors the percentage of the total variance explained is 84.11%. 
 
 ```{r}
 TVE_PCA10 <- data.frame("Cmpt_num" = 1:sum(PCA10$values),
@@ -573,7 +582,7 @@ rm(TVE_PCA10, TVE_PCA8_423)
 
 Thus, with 10 factors the percentage of the total variance explained is 85.15%.
 
-Both results are quite close and our factors explain most of the variance in the data.
+Both results are quite close and our factors explain most of the variance in the data. **eigen value ? **
 
 
 **SHOULD WE KEEP ANYTHING BELOW THIS? DISCUSS WITH MANUELA**
