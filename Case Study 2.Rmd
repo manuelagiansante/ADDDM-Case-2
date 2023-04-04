@@ -667,6 +667,8 @@ In both cases, Serviceability is the dimension which is more important, with the
 
 # Oblique Factor Analysis
 
+**assumptions of oblique**
+
 ## Run an oblique factor analysis with the variables of your final solution in exercise 1 using Promax.
 
 We run the OFA with principal axis factoring like before. What changes is the rotation method, which is not orthogonal anymore but accounts for correlations between factors (thus the term oblique).
@@ -746,6 +748,10 @@ y_factor_model <- fa(dfobl[, 34:38], nfactors = 2, rotate = "promax", fm = "pa")
 y_factor_model$loadings
 y_factor_model$Phi
 ```
+
+why they are highly correlated teh 2 factors
+
+*the double loading*
 
 ```{r}
 dfreg <- cbind(factors, y_factor_model$scores, df1$qd4, df1$qd23)
