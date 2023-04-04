@@ -27,6 +27,8 @@ library(corrplot)        # corrplot()
 library(caret)           # findCorrelation()
 library(REdaS)           # KMOS(), bart_spher()
 library(psych)           # KMO(), fa(), principal()
+
+options(scipen = 999)
 # library(pastecs)
 # library(dplyr)
 # library(rcompanion) 
@@ -402,7 +404,7 @@ fit_df <- matrix(nrow = 33, ncol = 4)
 colnames(fit_df) <- c("fit", "fit.off", "objective", "rms")
 fit_df <- as.data.frame(fit_df)
 
-# we compute the factor analysis for nfactors between 1 and 13 and record criteria results in fit_df
+# we compute the PCA for nfactors between 1 and 33 and record criteria results in fit_df
 for (i in 1:33) {
   PCA <- principal(df1, nfactors = i, rotate = "varimax")
   fit_df[i, 1] <- PCA$fit
@@ -439,7 +441,7 @@ fit_df <- matrix(nrow = 31, ncol = 4)
 colnames(fit_df) <- c("fit", "fit.off", "objective", "rms")
 fit_df <- as.data.frame(fit_df)
 
-# we compute the factor analysis for nfactors between 1 and 13 and record criteria results in fit_df
+# we compute the PCA for nfactors between 1 and 31 and record criteria results in fit_df
 for (i in 1:31) {
   PCA <- principal(df1[, -c(4,23)], nfactors = i, rotate = "varimax")
   fit_df[i, 1] <- PCA$fit
@@ -615,7 +617,7 @@ rm(FA9, PCA10)
 As we saw previously, both `FA8_423` and `PCA8_423` have showed clear loading patterns. We now look at the TVE tables again to gain more insight on how the eigenvalues (which are the sum of squared loadings by factor or component) describe the portion of each factor or component.
 
 
-```{r}
+```{r eigenvalues and importance}
 TVE_PAF <- FA8_423$Vaccounted
 TVE_PCA <- PCA8_423$Vaccounted
 
@@ -631,7 +633,7 @@ TVE_PCA %>% kable(digits = 3) %>% kable_styling(full_width = TRUE)
 
 In both PAF and PCA, the top three factors or components explaining the bigger proportions of variance are Serviceability, Performance and Aesthetics. The only change of order between factors is Features and Flawlessness which switch places between the two models. To better visualize the repartition of explained variance among factors, we display two Pareto charts.
 
-```{r}
+```{r pareto chart PAF}
 ggplot(mapping = aes(x = reorder(colnames(TVE_PAF), -TVE_PAF[4,]), y = TVE_PAF[4,])) +
   geom_col() +
   geom_line(aes(x = 1:8, y = TVE_PAF[5,]), color = "red") +
@@ -642,7 +644,7 @@ ggplot(mapping = aes(x = reorder(colnames(TVE_PAF), -TVE_PAF[4,]), y = TVE_PAF[4
        title = "Pareto chart of TVE for FA8_423")
 ```
 
-```{r}
+```{r pareto chart PCA}
 ggplot(mapping = aes(x = reorder(colnames(TVE_PCA), -TVE_PCA[4,]), y = TVE_PCA[4,])) +
   geom_col() +
   geom_line(aes(x = 1:8, y = TVE_PCA[5,]), color = "red") +
@@ -657,32 +659,148 @@ In both cases, Serviceability is the dimension which is more important, with the
 
 
 
-# Oblique Factor Anlysis
+# Oblique Factor Analysis
+
+## Run an oblique factor analysis with the variables of your final solution in exercise 1 using Promax.
+
+We run the OFA with principal axis factoring like before. What changes is the rotation method, which is not orthogonal anymore but accounts for correlations between factors (thus the term oblique).
+
+```{r OFA8_423}
+OFA8_423 <- fa(df1[, -c(4, 23)], nfactors = 8, rotate = "promax", fm = "pa")
+```
+
+## How high are the factors correlated and what is the highest correlation between factors?
+
+We display a correlation plot of the Phi matrix.
 
 ```{r}
-# components <- PCA10$scores
-# colnames(components) <- c("Serviceability",
-#                           "Performance",
-#                           "Aesthetics",
-#                           "Ease of use",
-#                           "Features",
-#                           "Flawlessness",
-#                           "Quality of materials",
-#                           "Durability",
-#                           "Prestige",
-#                           "Distinctiveness")
-# 
-# dfreg <- df[, c(9:41, 51, 52)]
-# dfreg <- na.omit(dfreg)
-# dfreg <- cbind(dfreg, components)
-# dfreg <- scale(dfreg)
-# dfreg <- as.data.frame(dfreg)
+cor_fac <- OFA8_423$Phi
+
+# changing to names of constructs for interpretability
+
+colnames(cor_fac) <- c("Serviceability", "Performance", "Aesthetics", "Ease of use",
+                       "Features", "Quality of materials", "Flawlessness", "Durability")
+
+rownames(cor_fac) <- c("Serviceability", "Performance", "Aesthetics", "Ease of use",
+                       "Features", "Quality of materials", "Flawlessness", "Durability")
+
+corrplot(cor_fac)
+```
+
+The highest correlation is between Performance and Features at 0.72. Both factors are quite close, as the performance of a smartphone can be linked to the performance of the features of said smartphone, and conversely one can think about the performance of a particular extra feature. The two topics having some overlap, as we also saw for example in past models with `qd8` being partially loaded onto the Performance construct, it is not surprising that they are quite strongly correlated.
+
+The lowest correlation is between Serviceability and Flawlessness, at 0.40. This also seems logical, as the relationship between customer service and the defects or glitches of a smartphone is quite removed, we would expect them not to be strongly correlated.
+
+We display a boxplot of the values of the correlations between factors (except for the diagonal values which are always 1).
+
+```{r}
+cor_fac <- cor_fac * upper.tri(cor_fac)
+cor_fac <- c(cor_fac)
+cor_fac <- cor_fac[cor_fac != 0]
+
+ggplot(mapping = aes(y = cor_fac)) +
+  geom_boxplot(width = 0.6) +
+  theme_classic() +
+  scale_x_continuous(limits = c(-0.5,0.5)) +
+  theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+  labs(y = "Correlation values",
+       title = "Boxplot of correlations between factors for OFA8_423")
+```
+
+Correlations between distinct factors range, as we saw, between 0.4 and 0.7. The median is around 0.55, with half the values being roughly between 0.51 and 0.61. This shows that correlations between factors are quite strong. Orthogonal factor analysis done in exercise 1 might not have been the best model to describe the factors, as correlations are significant.
+
+## Compute factor scores for your factors and name and label them appropriately.
+
+We can fetch the factor scores directly inside our model. We rename the columns as we did with the correlation matrix before and display the first six rows of our factor scores.
+
+```{r}
+factors <- as.data.frame(OFA8_423$scores)
+
+colnames(factors) <- c("Serviceability", "Performance", "Aesthetics", "Ease of use",
+                       "Features", "Quality of materials", "Flawlessness", "Durability")
+
+head(factors) %>% kable(digits = 2) %>% kable_styling(full_width = TRUE)
+```
+
+## Compute mean scores for the three willingness to pay premium items `wtp1`, `wtp2`, `wtp3` and the two repurchase intention items `ri1`, `ri2`.
+
+We create a dataframe selecting all columns which will be useful for the rest of this exercise. We remove NA values from the dataframe.
+
+```{r}
+dfobl <- df[, c(9:41, 43,44,45, 51,52, 74)]
+dfobl <- na.omit(dfobl)
+```
+
+We use factor analysis to construct two factors from the five variables mentioned.
+
+```{r}
+y_factor_model <- fa(dfobl[, 35:39], nfactors = 2, rotate = "promax", fm = "pa")
+y_factor_model$loadings
+y_factor_model$Phi
+```
+
+```{r}
+dfreg <- cbind(factors, y_factor_model$scores, df1$qd4, df1$qd23)
+colnames(dfreg)[9:12] <- c("wtp", "ri", "qd4", "qd23")
+dfreg <- scale(dfreg)
+dfreg <- as.data.frame(dfreg)
+```
+
+
+## Run a regression analysis with the factor scores of the quality dimensions as independent and both the mean score of willingness to pay premium and repurchase intention as dependent variables.
+
+
+
+
+```{r}
+lmreg <- lm(wtp ~. , data = dfreg[, -c(10,11,12)])
+summary(lmreg)
 ```
 
 
 ```{r}
-# options(scipen = 999)
-# lmreg <- lm(ri1 ~. , data = dfreg[, c(34, 36:45)])
-# summary(lmreg)
+lmreg <- lm(wtp ~. , data = dfreg[, -10])
+summary(lmreg)
 ```
+
+```{r}
+lmreg <- lm(ri ~. , data = dfreg[, -c(9,11,12)])
+summary(lmreg)
+```
+
+```{r}
+lmreg <- lm(ri ~. , data = dfreg[, -9])
+summary(lmreg)
+```
+
+## Do the results of the regression analysis for repurchase intentions differ across brands?
+
+```{r}
+dfreg$brandrec <- as.factor(dfobl$brandrec)
+levels(dfreg$brandrec) <- c("Apple", "Samsung", "LG", "Motorola", "Other")
+
+ggplot(data = dfreg, aes(brandrec)) +
+  geom_bar() +
+  theme_classic() +
+  labs(title = "Repartition of brands in dataset",
+       x = "Brand",
+       y = "Count")
+
+summary(dfreg$brandrec)
+```
+
+
+```{r}
+lmreg <- lm(wtp ~. , data = dfreg[dfreg$brandrec == "Apple", -c(10,13)])
+summary(lmreg)
+```
+```{r}
+lmreg <- lm(ri ~. , data = dfreg[dfreg$brandrec == "Motorola", -c(9,13)])
+summary(lmreg)
+```
+
+
+
+
+
 
