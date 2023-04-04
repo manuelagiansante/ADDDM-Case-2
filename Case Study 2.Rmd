@@ -680,7 +680,7 @@ OFA8_423 <- fa(df1[, -c(4, 23)], nfactors = 8, rotate = "promax", fm = "pa")
 
 We display a correlation plot of the Phi matrix.
 
-```{r}
+```{r factors corrplot}
 cor_fac <- OFA8_423$Phi
 
 # changing to names of constructs for interpretability
@@ -700,7 +700,7 @@ The lowest correlation is between Serviceability and Flawlessness, at 0.40. This
 
 We display a boxplot of the values of the correlations between factors (except for the diagonal values which are always 1).
 
-```{r}
+```{r factors cor boxplot}
 cor_fac <- cor_fac * upper.tri(cor_fac)
 cor_fac <- c(cor_fac)
 cor_fac <- cor_fac[cor_fac != 0]
@@ -722,7 +722,7 @@ Correlations between distinct factors range, as we saw, between 0.4 and 0.7. The
 
 We can fetch the factor scores directly inside our model. We rename the columns as we did with the correlation matrix before and display the first six rows of our factor scores.
 
-```{r}
+```{r factor scores}
 factors <- as.data.frame(OFA8_423$scores)
 
 colnames(factors) <- c("Serviceability", "Performance", "Aesthetics", "Ease of use",
@@ -735,34 +735,55 @@ head(factors) %>% kable(digits = 2) %>% kable_styling(full_width = TRUE)
 
 We create a dataframe selecting all columns which will be useful for the rest of this exercise. We remove NA values from the dataframe.
 
-```{r}
+```{r dfobl}
 dfobl <- df[, c(9:41, 43,44,45, 51,52, 74)]
 dfobl <- na.omit(dfobl)
 ```
 
 We use factor analysis to construct two factors from the five variables mentioned.
-For reference we will present the questions each variable corresponds to:
-**wtp1**: I am likely to pay a little bit more for using my current smartphone's brand
-**wtp2**: If my current smartphone's brand were to raise the price by 10%, I would likely remain with it
-**wtp3**: I am willing to pay more for my current smartphone's brand
-**ri1**: I intend to buy my current smartphone's brand in my next purchase
-**ri2**: If I want to buy a smartphone  again, I will buy my current brand
 
-```{r}
+For reference we will present the questions each variable corresponds to:
+
+- **wtp1**: I am likely to pay a little bit more for using my current smartphone's brand
+- **wtp2**: If my current smartphone's brand were to raise the price by 10%, I would likely remain with it
+- **wtp3**: I am willing to pay more for my current smartphone's brand
+- **ri1**: I intend to buy my current smartphone's brand in my next purchase
+- **ri2**: If I want to buy a smartphone again, I will buy my current brand
+
+We look at the means of these five questions.
+
+```{r means wtp ri}
+colMeans(dfobl[, 34:38])
+```
+
+The questions are all on a 7 point scale as follows:
+
+```{r scale table, echo=FALSE}
+t(matrix(c(1,2,3,4,5,6,7,
+         "Strongly disagree", "Disagree", "Somewhat disagree", "Neither agree nor disagree",
+         "Somewhat agree", "Agree", "Strongly agree"), nrow = 7, ncol = 2)) %>%
+  kable(align = "c") %>% 
+  kable_styling(full_width = TRUE)
+```
+
+This means that on average for willingness to pay premium, people answered between "Neither agree nor disagree" and "Somewhat agree", whereas for repurchase intention, they answered between "Somewhat agree" and "Agree".
+
+Now, we construct our two factors from the five variables.
+
+```{r wtp ri factors}
 y_factor_model <- fa(dfobl[, 34:38], nfactors = 2, rotate = "promax", fm = "pa")
 y_factor_model$loadings
 y_factor_model$Phi
 ```
 
-Regarding the loadings we see that wtp2 loads on both factors. In fact if we re-read the question, we can see how that would be the case, the client is asked about a price raise and the likelihood of them sticking with said product. So the factors of willing to pay for premium items/services and repurchase intention intersect each other.
+Regarding the loadings we see that `wtp2` loads on both factors. In fact if we re-read the question, we can see how that would be the case, the client is asked about a price raise and the likelihood of them sticking with said product. So the factors of willing to pay for premium items/services and repurchase intention intersect each other.
 
 This also logically makes sense, because in the not precisely formulated question wtp2 there is space for interpretation in thinking that there might be repurchase implications.
 
 
-Moreover, we look at the correlation matrix of the factors which this being factor analysis are allowed to be correlated, the correlation is 73.7%. Again, this is quite intuitive the willingness of paying for premium objects, speaks for an intentions of continuity. The user is willing to pay for extra services is interested in sticking to the brand of choice for a extented period of time.
+Moreover, we look at the correlation matrix of the factors which this being factor analysis are allowed to be correlated, the correlation is 73.7%. Again, this is quite intuitive the willingness of paying for premium objects, speaks for an intentions of continuity. The user is willing to pay for extra services is interested in sticking to the brand of choice for a extended period of time.
 
-```{r}
-# Computing mean scores
+```{r dfreg}
 dfreg <- cbind(factors, y_factor_model$scores, df1$qd4, df1$qd23)
 colnames(dfreg)[9:12] <- c("wtp", "ri", "qd4", "qd23")
 dfreg <- scale(dfreg)
@@ -776,30 +797,29 @@ dfreg <- as.data.frame(dfreg)
 
 In this case we are not considering 
 
-```{r}
+```{r reg wtp}
 lmreg <- lm(wtp ~. , data = dfreg[, -c(10,11,12)])
 summary(lmreg)
 ```
 
-
-```{r}
+```{r reg wtp with 423}
 lmreg <- lm(wtp ~. , data = dfreg[, -10])
 summary(lmreg)
 ```
 
-```{r}
+```{r reg ri}
 lmreg <- lm(ri ~. , data = dfreg[, -c(9,11,12)])
 summary(lmreg)
 ```
 
-```{r}
+```{r reg ri with 423}
 lmreg <- lm(ri ~. , data = dfreg[, -9])
 summary(lmreg)
 ```
 
 ## Do the results of the regression analysis for repurchase intentions differ across brands?
 
-```{r}
+```{r brands barplot} 
 dfreg$brandrec <- as.factor(dfobl$brandrec)
 levels(dfreg$brandrec) <- c("Apple", "Samsung", "LG", "Motorola", "Other")
 
@@ -814,12 +834,28 @@ summary(dfreg$brandrec)
 ```
 
 
-```{r}
-lmreg <- lm(wtp ~. , data = dfreg[dfreg$brandrec == "Apple", -c(10,13)])
+```{r reg apple}
+lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Apple", -13])
 summary(lmreg)
 ```
-```{r}
-lmreg <- lm(ri ~. , data = dfreg[dfreg$brandrec == "Motorola", -c(9,13)])
+
+```{r reg samsung}
+lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Samsung", -13])
+summary(lmreg)
+```
+
+```{r reg lg}
+lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "LG", -13])
+summary(lmreg)
+```
+
+```{r reg motorola}
+lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Motorola", -13])
+summary(lmreg)
+```
+
+```{r reg other}
+lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Other", -13])
 summary(lmreg)
 ```
 
@@ -827,7 +863,7 @@ summary(lmreg)
 
 ## Please compare the brands on the factor scores. What are points of parity and points of difference for the different brands.
 
-```{r}
+```{r boxplots factor and brand}
 ggplot(data = melt(dfreg[, c(1:8, 13)]), aes(y = value, color = brandrec)) +
   facet_wrap(~ variable, nrow = 2) +
   geom_boxplot() +
