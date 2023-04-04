@@ -667,11 +667,10 @@ In both cases, Serviceability is the dimension which is more important, with the
 
 # Oblique Factor Analysis
 
-**assumptions of oblique**
-
 ## Run an oblique factor analysis with the variables of your final solution in exercise 1 using Promax.
 
-We run the OFA with principal axis factoring like before. What changes is the rotation method, which is not orthogonal anymore but accounts for correlations between factors (thus the term oblique).
+We run the OFA with principal axis factoring like before. What changes is the rotation method, which is not orthogonal anymore, but accounts for correlations between factors (thus the term oblique).
+
 
 ```{r OFA8_423}
 OFA8_423 <- fa(df1[, -c(4, 23)], nfactors = 8, rotate = "promax", fm = "pa")
@@ -742,6 +741,12 @@ dfobl <- na.omit(dfobl)
 ```
 
 We use factor analysis to construct two factors from the five variables mentioned.
+For reference we will present the questions each variable corresponds to:
+**wtp1**: I am likely to pay a little bit more for using my current smartphone's brand
+**wtp2**: If my current smartphone's brand were to raise the price by 10%, I would likely remain with it
+**wtp3**: I am willing to pay more for my current smartphone's brand
+**ri1**: I intend to buy my current smartphone's brand in my next purchase
+**ri2**: If I want to buy a smartphone  again, I will buy my current brand
 
 ```{r}
 y_factor_model <- fa(dfobl[, 34:38], nfactors = 2, rotate = "promax", fm = "pa")
@@ -749,11 +754,15 @@ y_factor_model$loadings
 y_factor_model$Phi
 ```
 
+Regarding the loadings we see that wtp2 loads on both factors. In fact if we re-read the question, we can see how that would be the case, the client is asked about a price raise and the likelihood of them sticking with said product. So the factors of willing to pay for premium items/services and repurchase intention intersect each other.
+
+This also logically makes sense, because in the not precisely formulated question wtp2 there is space for interpretation in thinking that there might be repurchase implications.
 
 
-*the double loading*
+Moreover, we look at the correlation matrix of the factors which this being factor analysis are allowed to be correlated, the correlation is 73.7%. Again, this is quite intuitive the willingness of paying for premium objects, speaks for an intentions of continuity. The user is willing to pay for extra services is interested in sticking to the brand of choice for a extented period of time.
 
 ```{r}
+# Computing mean scores
 dfreg <- cbind(factors, y_factor_model$scores, df1$qd4, df1$qd23)
 colnames(dfreg)[9:12] <- c("wtp", "ri", "qd4", "qd23")
 dfreg <- scale(dfreg)
@@ -761,10 +770,11 @@ dfreg <- as.data.frame(dfreg)
 ```
 
 
-## Run a regression analysis with the factor scores of the quality dimensions as independent and both the mean score of willingness to pay premium and repurchase intention as dependent variables.
+## Run a regression analysis with the factor scores of the quality dimensions as independent variables and both the mean score of willingness to pay premium and repurchase intention as dependent variables.
 
+### Willingness to pay for premium items regression
 
-
+In this case we are not considering 
 
 ```{r}
 lmreg <- lm(wtp ~. , data = dfreg[, -c(10,11,12)])
