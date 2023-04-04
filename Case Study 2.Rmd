@@ -605,9 +605,9 @@ rm(TVE_PCA10, TVE_PCA8_423)
 
 Thus, with 10 factors the percentage of the total variance which is explained by the model is 85.15%.
 
-Both results are quite close and our factors explain most of the variance in the data. **eigenvalue ?**
+Both results are quite close and our factors explain most of the variance in the data.
 
-To be coherent with the best model we chose for PAF, we will select `PCA8_423`. `PCA10` works well from the point of view of principal component analysis, because its goal is to produce an empirical summary of the data set. However, the components of PCA do not necessarily have a causal interpretation, in opposition to PFA, which aims find underlying constructs of the data, called factors. Since our PFA analysis showed that `qd4` and `qd23` are not adapted to this modelling via factors because of their standalone nature, to preserve the most meaningful interpretation of our data set, we will continue by keeping `FA8_423` and `PCA8_423`.
+To be coherent with the best model we chose for PAF, we will select `PCA8_423`. `PCA10` works well from the point of view of principal component analysis, because its goal is to produce an empirical summary of the data set. However, the components of PCA do not necessarily have a causal interpretation, in opposition to PFA, which aims find underlying constructs of the data, called factors. Since our PAF analysis showed that `qd4` and `qd23` are not adapted to this modelling via factors because of their standalone nature, to preserve the most meaningful interpretation of our data set, we will continue by keeping `FA8_423` and `PCA8_423`.
 
 ```{r removing FA9 and PCA10}
 rm(FA9, PCA10)
