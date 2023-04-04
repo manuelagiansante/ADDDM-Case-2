@@ -466,6 +466,8 @@ fit_df %>% gather() %>%
   labs(title = "Various criteria for Principal Component Analysis without qd4 and qd23",
        x = "Number of components",
        y = "")
+
+rm(fit_df)
 ```
 
 Without questions 4 and 23, the best model seems to be the one with 8 components.
@@ -653,6 +655,8 @@ ggplot(mapping = aes(x = reorder(colnames(TVE_PCA), -TVE_PCA[4,]), y = TVE_PCA[4
   labs(x = "Component",
        y = "Proportion of TVE",
        title = "Pareto chart of TVE for PCA8_423")
+
+rm(TVE_PAF, TVE_PCA)
 ```
 
 In both cases, Serviceability is the dimension which is more important, with the biggest gap compared to other dimensions. The Pareto curve is very smooth and flat, which means that the importance of each dimension is a slow decrease. This can also be observed by the fact that gaps are minimal between each bar once we pass Serviceability. This means that even if there are some more important dimensions, all dimensions bring their share in explaining part of the TVE, there does not seem to be a superfluous or unimportant dimension.
@@ -705,6 +709,8 @@ ggplot(mapping = aes(y = cor_fac)) +
   theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
   labs(y = "Correlation values",
        title = "Boxplot of correlations between factors for OFA8_423")
+
+rm(cor_fac)
 ```
 
 Correlations between distinct factors range, as we saw, between 0.4 and 0.7. The median is around 0.55, with half the values being roughly between 0.51 and 0.61. This shows that correlations between factors are quite strong. Orthogonal factor analysis done in exercise 1 might not have been the best model to describe the factors, as correlations are significant.
