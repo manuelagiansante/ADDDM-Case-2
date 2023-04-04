@@ -749,7 +749,7 @@ y_factor_model$loadings
 y_factor_model$Phi
 ```
 
-why they are highly correlated teh 2 factors
+
 
 *the double loading*
 
@@ -805,19 +805,16 @@ summary(dfreg$brandrec)
 
 
 ```{r}
-lmreg <- lm(wtp ~. , data = dfreg[dfreg$brandrec == "Samsung", -c(10,13)])
+lmreg <- lm(wtp ~. , data = dfreg[dfreg$brandrec == "Apple", -c(10,13)])
 summary(lmreg)
 ```
-
 ```{r}
 lmreg <- lm(ri ~. , data = dfreg[dfreg$brandrec == "Motorola", -c(9,13)])
 summary(lmreg)
 ```
 
 
-## What do the results of these regressions imply?
 
-## Please compare the brands on the factor scores. What are points of parity and points of difference for the different brands.
 
 
 
