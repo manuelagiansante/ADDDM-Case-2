@@ -823,7 +823,22 @@ lmreg <- lm(ri ~. , data = dfreg[dfreg$brandrec == "Motorola", -c(9,13)])
 summary(lmreg)
 ```
 
+## What do the results of these regressions imply?
 
+## Please compare the brands on the factor scores. What are points of parity and points of difference for the different brands.
+
+```{r}
+ggplot(data = melt(dfreg[, c(1:8, 13)]), aes(y = value, color = brandrec)) +
+  facet_wrap(~ variable, nrow = 2) +
+  geom_boxplot() +
+  theme_classic() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(title = "Boxplots of factor scores per brand",
+       y = "Factor score",
+       color = "Brand")
+```
 
 
 
