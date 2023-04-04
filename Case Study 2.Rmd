@@ -68,6 +68,8 @@ Now, our data frame `df1` has no more missing values.
 
 # Orthogonal Factor Analysis
 
+We proceed with this analysis assuming independence between the factor we will attempt to extract.
+
 ## Inspect the correlation matrix.
 
 We compute the correlation matrix and plot it.
