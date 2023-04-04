@@ -740,7 +740,7 @@ dfobl <- na.omit(dfobl)
 We use factor analysis to construct two factors from the five variables mentioned.
 
 ```{r}
-y_factor_model <- fa(dfobl[, 35:39], nfactors = 2, rotate = "promax", fm = "pa")
+y_factor_model <- fa(dfobl[, 34:38], nfactors = 2, rotate = "promax", fm = "pa")
 y_factor_model$loadings
 y_factor_model$Phi
 ```
