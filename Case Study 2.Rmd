@@ -768,9 +768,11 @@ t(matrix(c(1,2,3,4,5,6,7,
 
 This means that on average for willingness to pay premium, people answered between "Neither agree nor disagree" and "Somewhat agree", whereas for repurchase intention, they answered between "Somewhat agree" and "Agree".
 
+
 Now, we construct our two factors from the five variables.
 
 ```{r wtp ri factors}
+
 y_factor_model <- fa(dfobl[, 34:38], nfactors = 2, rotate = "promax", fm = "pa")
 y_factor_model$loadings
 y_factor_model$Phi
@@ -781,26 +783,31 @@ Regarding the loadings we see that `wtp2` loads on both factors. In fact if we r
 This also logically makes sense, because in the not precisely formulated question wtp2 there is space for interpretation in thinking that there might be repurchase implications.
 
 
-Moreover, we look at the correlation matrix of the factors which this being factor analysis are allowed to be correlated, the correlation is 73.7%. Again, this is quite intuitive the willingness of paying for premium objects, speaks for an intentions of continuity. The user is willing to pay for extra services is interested in sticking to the brand of choice for a extended period of time.
+Moreover, we look at the correlation matrix of the factors which this being factor analysis are allowed to be correlated, the correlation is 73.7%. Again, this is quite intuitive, the willingness of paying for premium objects, speaks for an intentions of continuity. The user is willing to pay for extra services is interested in sticking to the brand of choice for a extended period of time.
 
 ```{r dfreg}
+# Create data frame for the regressions
 dfreg <- cbind(factors, y_factor_model$scores, df1$qd4, df1$qd23)
 colnames(dfreg)[9:12] <- c("wtp", "ri", "qd4", "qd23")
 dfreg <- scale(dfreg)
 dfreg <- as.data.frame(dfreg)
 ```
 
-
 ## Run a regression analysis with the factor scores of the quality dimensions as independent variables and both the mean score of willingness to pay premium and repurchase intention as dependent variables.
 
 ### Willingness to pay for premium items regression
 
-In this case we are not considering 
+In this case we are not considering qd4 and qd23, of course the intention of re-purchase is not considered among the predictor. The dependent variable is the factor for willingness to pay.
+The `lm()` function takes care of standardising the data so to make the coefficients comparables.
 
 ```{r reg wtp}
 lmreg <- lm(wtp ~. , data = dfreg[, -c(10,11,12)])
 summary(lmreg)
 ```
+
+The predictors resulting significant are (in this order) "Ease of Use" with a 0.18 coefficient. Serviceability and Features are the most relevant factors. Performance and Quality of materials have a 99% significance level.
+Flawlessness and Durability do not seem to be the most relevant factors, which seems coherent given that a lot of people change change their phones in order to stay on top of the new trends.
+
 
 ```{r reg wtp with 423}
 lmreg <- lm(wtp ~. , data = dfreg[, -10])
