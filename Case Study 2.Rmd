@@ -65,7 +65,6 @@ vis_miss(df1)
 
 Now, our data frame `df1` has no more missing values.
 
-
 # Orthogonal Factor Analysis
 
 We proceed with this analysis assuming independence between the factor we will attempt to extract.
@@ -130,7 +129,7 @@ We get the following 10 different groups:
 -   Item 23, related to prestige.
 
 This grouping is quite close to quality dimensions defined in the literature (see Table 1 of the assignment pdf).
-The differences would be the presence of a construct about the quality of materials, which is not listed in the dimensions of quality, and the fact that questions 4 and 23 should reflect the same underlying construct, "Distinctiveness/Prestige", but it does not seem to be the case from experimental data, as the two variables are very weekly correlated.
+The differences would be the presence of a construct about the quality of materials, which is not listed in the dimensions of quality, and the fact that questions 4 and 23 should reflect the same underlying construct, "Distinctiveness/Prestige", but it does not seem to be the case from experimental data, as the two variables are very weakly correlated.
 
 ## Check whether the data set and all of its variables are suitable for factor analysis.
 
@@ -219,24 +218,29 @@ The only two items we need to pay special attention to are `qd4` and `qd23`, as 
 
 ## Run principal axis factoring (PAF) and use varimax rotation.
 
-PAF is an exploratory factor analysis method (or Factor Extraction Method), it attempts to find the least number of factors accounting for common variance of a set of variables. It uses a reduced correlation matrix, with a diagonal containing communalities.
+PAF is an exploratory factor analysis method (or Factor Extraction Method), it attempts to find the least number of factors accounting for common variance of a set of variables.
+It uses a reduced correlation matrix, with a diagonal containing communalities.
 
 It assumes that the variance of the observed variables cannot be fully explained by the extracted factors, it decomposes the variance in communality and unique variance, without accounting for specific and error variability.
 
 PAF is implemented with the `fa` function from `psych` package.
 
-We use the "varimax" rotation, which is designed to simplify the interpretation of the loadings. Varimax works by maximizing the sum of the variance of each squared factor loading. It pushes factors to become closer to 1 or 0, which facilitates interpretation.
+We use the "varimax" rotation, which is designed to simplify the interpretation of the loadings.
+Varimax works by maximizing the sum of the variance of each squared factor loading.
+It pushes factors to become closer to 1 or 0, which facilitates interpretation.
 
-The number of underlying factors has to be specified inside the function. If we try to input a number of factors greater than 13, `fa` returns an error. Thus, we test options for models going from 1 factor to 13 and record each time some criteria aimed at helping select the best model.
+The number of underlying factors has to be specified inside the function.
+If we try to input a number of factors greater than 13, `fa` returns an error.
+Thus, we test options for models going from 1 factor to 13 and record each time some criteria aimed at helping select the best model.
 
 Those criterias are:
 
-- `fit`, which measures how well the factor model reproduces the correlation matrix;
-- `objective`, which is the value of the function that is minimized by a maximum likelihood procedure;
-- `rms`, which is the sum of the squared off-diagonal residuals divided by the degrees of freedom;
-- `crms`, which is the RMS adjusted for degrees of freedom;
-- `TLI`, which is the Tucker Lewis Index of factoring reliability;
-- `BIC`, which is the Bayesian information criterion.
+-   `fit`, which measures how well the factor model reproduces the correlation matrix;
+-   `objective`, which is the value of the function that is minimized by a maximum likelihood procedure;
+-   `rms`, which is the sum of the squared off-diagonal residuals divided by the degrees of freedom;
+-   `crms`, which is the RMS adjusted for degrees of freedom;
+-   `TLI`, which is the Tucker Lewis Index of factoring reliability;
+-   `BIC`, which is the Bayesian information criterion.
 
 A good model exhibits high values of `fit` and `TLI`, and low values of the others.
 
@@ -276,8 +280,9 @@ fit_df %>% gather() %>%
        y = "")
 ```
 
-The dashed lines designate the number of factors which seem the most appropriate for our data. The improvement in criteria for numbers of factors greater than 9 is much slower and less significant. Depending on the criterion, we would choose 8 or 9, so we will test both models with and without including questions 4 and 23, since our exploratory analysis of the data indicated that those two variables probably will not be loaded onto factors, as they are standalone.
-
+The dashed lines designate the number of factors which seem the most appropriate for our data.
+The improvement in criteria for numbers of factors greater than 9 is much slower and less significant.
+Depending on the criterion, we would choose 8 or 9, so we will test both models with and without including questions 4 and 23, since our exploratory analysis of the data indicated that those two variables probably will not be loaded onto factors, as they are standalone.
 
 ```{r PAF candidate models}
 FA8 <- fa(df1, nfactors = 8, rotate = "varimax", fm = "pa")
@@ -311,15 +316,15 @@ par(mfrow = c(1,1))
 
 We remark the following:
 
-- In `FA8`, questions 4 and 23 aren't loaded on any factor. Each other variable is clearly loaded on a unique factor.
-- In `FA8_423`, each variable is clearly loaded on one factor like before, since we deleted the two variables which weren't associated on any of the 8 factors. If we decide to keep a model with 8 factors, we could delete `qd4` and `qd23` as they will not be loaded onto a factor in any case.
-- In `FA9`, questions 4 and 23 are loaded onto one factor together and all other variables are loaded on one of the 8 other factors. The loadings of `qd4` and `qd23` are the lowest however, at 0.414 and 0.474 respectively.
-- In `FA9_423`, the ninth factor has no variable loaded on it, as we have deleted questions 4 and 23 and the other items are arranged on 8 factors. This model is not appropriate for the data and should be discarded.
+-   In `FA8`, questions 4 and 23 aren't loaded on any factor. Each other variable is clearly loaded on a unique factor.
+-   In `FA8_423`, each variable is clearly loaded on one factor like before, since we deleted the two variables which weren't associated on any of the 8 factors. If we decide to keep a model with 8 factors, we could delete `qd4` and `qd23` as they will not be loaded onto a factor in any case.
+-   In `FA9`, questions 4 and 23 are loaded onto one factor together and all other variables are loaded on one of the 8 other factors. The loadings of `qd4` and `qd23` are the lowest however, at 0.414 and 0.474 respectively.
+-   In `FA9_423`, the ninth factor has no variable loaded on it, as we have deleted questions 4 and 23 and the other items are arranged on 8 factors. This model is not appropriate for the data and should be discarded.
 
 In summary, there are two possible models:
 
-- A model with 8 factors which does not include `qd4` and `qd23`;
-- A model with 9 factors in which `qd4` and `qd23` are loaded onto a factor together.
+-   A model with 8 factors which does not include `qd4` and `qd23`;
+-   A model with 9 factors in which `qd4` and `qd23` are loaded onto a factor together.
 
 We discard `FA8` and `FA9_423` and display the numerical loadings greater than 0.3 of the two remaining models.
 
@@ -330,14 +335,20 @@ print(FA8_423$loadings, cutoff = 0.3, sort = TRUE)
 print(FA9$loadings, cutoff = 0.3, sort = TRUE)
 ```
 
-We notice that the factors created by PAF are the same groups we identified with our clustering of the correlation matrix. In both models, `qd8`, which was grouped with the features construct, is partially loaded onto factor PA1, which corresponds to the performance construct. We fetch its description.
+We notice that the factors created by PAF are the same groups we identified with our clustering of the correlation matrix.
+In both models, `qd8`, which was grouped with the features construct, is partially loaded onto factor PA1, which corresponds to the performance construct.
+We fetch its description.
 
 ```{r qd8 descr}
 descriptions[name %in% "qd8", ]
 ```
-Some people answering might consider not only extra features but any features of their smartphone and evaluate their performance, i.e. how they function. This might explain why `qd8` is partially loaded onto the performance construct. However, it remains mainly loaded onto the features construct, with a value of 0.558 or 0.559 according to the model.
 
-In model `FA9`, loadings of `qd4` and `qd23` on their factor are the weakest of all "main" loadings. This could indicate that keeping `qd4` and `qd23` might not be totally appropriate and is up to discussion.
+Some people answering might consider not only extra features but any features of their smartphone and evaluate their performance, i.e. how they function.
+This might explain why `qd8` is partially loaded onto the performance construct.
+However, it remains mainly loaded onto the features construct, with a value of 0.558 or 0.559 according to the model.
+
+In model `FA9`, loadings of `qd4` and `qd23` on their factor are the weakest of all "main" loadings.
+This could indicate that keeping `qd4` and `qd23` might not be totally appropriate and is up to discussion.
 
 When looking at the communalities of our models, we get the following results:
 
@@ -346,7 +357,10 @@ sort(FA8_423$communality)
 sort(FA9$communality)
 ```
 
-This further indicates that questions 4 and 23 might not be appropriate in for factor analysis, as their communalities inside `FA9` are extremely low. The communality of an item is the sum of the squared factor loadings for that item. It measures the proportion of the item's variance that can be explained by the underlying factors. If the communality equals 1 then a complete replication of the variable can me obtained through the sole use of factors.
+This further indicates that questions 4 and 23 might not be appropriate in for factor analysis, as their communalities inside `FA9` are extremely low.
+The communality of an item is the sum of the squared factor loadings for that item.
+It measures the proportion of the item's variance that can be explained by the underlying factors.
+If the communality equals 1 then a complete replication of the variable can me obtained through the sole use of factors.
 
 We observe the scree plots of our two models.
 
@@ -374,19 +388,29 @@ ggplot(mapping = aes(x = 1:length(FA9$values),
        color = "Eigenvalue >= 1")
 ```
 
-The eigenvalues are plotted above, the horizontal line represents the significance threshold of 1. If we would only select based on the eigenvalues bigger than 1, then our model would have only 5 factors. However, due to all our previous analysis, this does not seem to be the best choice. The elbow rule would probably cut at 8 factors for `FA8_423`, as there is a bigger gap between 8 and 9. However, `FA9` does not have such a gap and the descent is quite smooth, so it is more difficult to determine.
-
+The eigenvalues are plotted above, the horizontal line represents the significance threshold of 1.
+If we would only select based on the eigenvalues bigger than 1, then our model would have only 5 factors.
+However, due to all our previous analysis, this does not seem to be the best choice.
+The elbow rule would probably cut at 8 factors for `FA8_423`, as there is a bigger gap between 8 and 9.
+However, `FA9` does not have such a gap and the descent is quite smooth, so it is more difficult to determine.
 
 ## Decide on a final principal factor analysis solution.
 
 After reviewing all the information we gathered about our model, we decide to keep `FA8_423` over `FA9`.
 
-Questions 4 and 23 Showed very little correlation with each other and even if they should theoretically represent the same construct of distinctiveness and prestige, the construct was not explored enough through questions in the survey. Every other construct had between 3 and 5 questions and the questions exhibit high correlations when they are in the same group.
+Questions 4 and 23 Showed very little correlation with each other and even if they should theoretically represent the same construct of distinctiveness and prestige, the construct was not explored enough through questions in the survey.
+Every other construct had between 3 and 5 questions and the questions exhibit high correlations when they are in the same group.
 
-Furthermore, the BIC is lowest for 8 factors and starts slowly rising again once we get past 8. The loadings of `qd4` and `qd23` in the `FA9` model remain lower than all other loadings of items inside their construct, being even lower than 0.5. When we looked at the anti-image correlation matrix diagonal, the proportions of unique variance in questions 4 and 23 were dominating the rest, indicating that the rest of the data set cannot explain most of their variance. Moreoever, their communalities were very low in `FA9`.
+Furthermore, the BIC is lowest for 8 factors and starts slowly rising again once we get past 8.
+The loadings of `qd4` and `qd23` in the `FA9` model remain lower than all other loadings of items inside their construct, being even lower than 0.5.
+When we looked at the anti-image correlation matrix diagonal, the proportions of unique variance in questions 4 and 23 were dominating the rest, indicating that the rest of the data set cannot explain most of their variance.
+Moreover, their communalities were very low in `FA9`.
 
-These reasons combined made us choose model `FA8_423`. Its constructs are the ones we listed when we inspected the correlation matrix (except of course the constructs of questions 4 and 23). The loading patterns of `FA8_423`, as we discussed in the previous point, are clear.
+These reasons combined made us choose model `FA8_423`.
+Its constructs are the ones we listed when we inspected the correlation matrix (except of course the constructs of questions 4 and 23).
+The loading patterns of `FA8_423`, as we discussed in the previous point, are clear.
 
+**An additional reason is that in the case in which we decide for qd4 and qd23 to form single standing factors , is the fact that these variable are not correlated to any of the other factors.**
 
 ## Run a principal component analysis (PCA) and compare the results.
 
@@ -394,11 +418,10 @@ Like with PAF, we run models with number of components ranging from 1 to 33 and 
 
 For PCA, the criteria are:
 
-- `fit`, which measures how well the components model reproduces the correlation matrix;
-- `fit.off`, which measures how well the off-diagonal elements of the correlation matrix are reproduced;
-- `objective`, which is the value of the function that is minimized by a maximum likelihood procedure;
-- `rms`, which is the sum of the squared off-diagonal residuals divided by the degrees of freedom.
-
+-   `fit`, which measures how well the components model reproduces the correlation matrix;
+-   `fit.off`, which measures how well the off-diagonal elements of the correlation matrix are reproduced;
+-   `objective`, which is the value of the function that is minimized by a maximum likelihood procedure;
+-   `rms`, which is the sum of the squared off-diagonal residuals divided by the degrees of freedom.
 
 ```{r PCA best nfactor}
 # we initiate and empty dataframe which will record our criteria values
@@ -433,7 +456,8 @@ fit_df %>% gather() %>%
        y = "")
 ```
 
-Here, the ideal number of components seems to be 10, indicated by a dashed line. It is a local minimum of the objective function and is at thw elbow of the other three curves.
+Here, the ideal number of components seems to be 10, indicated by a dashed line.
+It is a local minimum of the objective function and is at thw elbow of the other three curves.
 
 However, we check if this result would vary by omitting standalone variables `qd4` and `qd23`.
 
@@ -500,9 +524,12 @@ corrplot(t(PCA10$loadings),
          title = "CPA with 10 factors \n Loadings",
          mar = c(1, 1, 3, 0))
 ```
-In both `PCA8_423` and `PCA10`, each questions looks strongly loaded onto one component. In `PCA8_423`, question 4 and 23 each have their own component and their loadings are the strongest ones, in opposition to what we observed for PAF.
 
-However, `PCA8` has some less clearer loadings, in particular when looking at factor `RC7`. The two groups we had defined as durability and quality of materials are pushed together onto one component, but the loadings given to durability are smaller than when they are allowed to be by themselves onto one component like in `PCA8_423`.
+In both `PCA8_423` and `PCA10`, each questions looks strongly loaded onto one component.
+In `PCA8_423`, question 4 and 23 each have their own component and their loadings are the strongest ones, in opposition to what we observed for PAF.
+
+However, `PCA8` has some less clearer loadings, in particular when looking at factor `RC7`.
+The two groups we had defined as durability and quality of materials are pushed together onto one component, but the loadings given to durability are smaller than when they are allowed to be by themselves onto one component like in `PCA8_423`.
 
 We take a look at the numerical values of the loadings, displaying only the ones above 0.3.
 
@@ -512,8 +539,9 @@ print(PCA8_423$loadings, cutoff = 0.3, sort = TRUE)
 print(PCA10$loadings, cutoff = 0.3, sort = TRUE)
 ```
 
-
-Like with PAF, we notice that `qd8` is partially loaded onto the component corresponding to performance. However, compared with PAF, the loadings are globally slightly higher. The loadings of questions 4 and 23 are extremely high for `PCA10`.
+Like with PAF, we notice that `qd8` is partially loaded onto the component corresponding to performance.
+However, compared with PAF, the loadings are globally slightly higher.
+The loadings of questions 4 and 23 are extremely high for `PCA10`.
 
 The loadings for `PCA8` have a lot of variables with low loadings, which does not seem to be the best option, given that comparatively the other models look much nicer.
 
@@ -525,14 +553,14 @@ sort(PCA8_423$communality)
 sort(PCA10$communality)
 ```
 
-Unlike with PAF, in `PCA10`, the underlying components in our model, which are dedicated to `qd4` and `qd23`, explain most of the variance of the two variables. This gives both models high communalities for all variables, with the lowest values being around 0.73.
+Unlike with PAF, in `PCA10`, the underlying components in our model, which are dedicated to `qd4` and `qd23`, explain most of the variance of the two variables.
+This gives both models high communalities for all variables, with the lowest values being around 0.73.
 
 The communalities for `PCA8` are lower for many of the variables, observing this and the unclear loadings, we decide to not move further with this model.
 
 ```{r removing PCA8}
 rm(PCA8)
 ```
-
 
 We display the scree plots.
 
@@ -560,16 +588,17 @@ ggplot(mapping = aes(x = 1:length(PCA10$values),
        color = "Eigenvalue >= 1")
 ```
 
-Again, the rule of taking values above 1 seems slightly more strict than what our analysis seems to indicate. However, both models have a small but distinct elbow, which corresponds to the number of components selected for each.
+Again, the rule of taking values above 1 seems slightly more strict than what our analysis seems to indicate.
+However, both models have a small but distinct elbow, which corresponds to the number of components selected for each.
 
 We take a look at the the total variance explained by each component in our models.
 
-Let us recall that the eigenvalue of a component represents the amount of the total variance explained (TVE) by that component. We can directly fetch these numbers inside our models.
+Let us recall that the eigenvalue of a component represents the amount of the total variance explained (TVE) by that component.
+We can directly fetch these numbers inside our models.
 
 ```{r vaccounted pca8}
 PCA8_423$Vaccounted
 ```
-
 
 ```{r eval=FALSE, include=FALSE}
 TVE_PCA8_423 <- data.frame("Cmpt_num" = 1:sum(PCA8_423$values),
@@ -584,7 +613,7 @@ kable(TVE_PCA8_423, col.names = c("Component",
    kable_styling(full_width = TRUE)
 ```
 
-Thus, with 8 factors the percentage of the total variance which is explained by the model is 84.11%. 
+Thus, with 8 factors the percentage of the total variance which is explained by the model is 84.11%.
 
 ```{r vaccounted pca10}
 PCA10$Vaccounted
@@ -609,17 +638,48 @@ Thus, with 10 factors the percentage of the total variance which is explained by
 
 Both results are quite close and our factors explain most of the variance in the data.
 
-To be coherent with the best model we chose for PAF, we will select `PCA8_423`. `PCA10` works well from the point of view of principal component analysis, because its goal is to produce an empirical summary of the data set. However, the components of PCA do not necessarily have a causal interpretation, in opposition to PFA, which aims find underlying constructs of the data, called factors. Since our PAF analysis showed that `qd4` and `qd23` are not adapted to this modelling via factors because of their standalone nature, to preserve the most meaningful interpretation of our data set, we will continue by keeping `FA8_423` and `PCA8_423`.
+To be coherent with the best model we chose for PAF, we will select `PCA8_423`.
+`PCA10` works well from the point of view of principal component analysis, because its goal is to produce an empirical summary of the data set.
+However, the components of PCA do not necessarily have a causal interpretation, in opposition to PFA, which aims find underlying constructs of the data, called factors.
+Since our PAF analysis showed that `qd4` and `qd23` are not adapted to this modelling via factors because of their standalone nature, to preserve the most meaningful interpretation of our data set, we will continue by keeping `FA8_423` and `PCA8_423`.
 
 ```{r removing FA9 and PCA10}
 rm(FA9, PCA10)
 ```
 
-
 ## What do the eigenvalues of the factors (quality dimensions) tell us about their relevance for repurchase behaviour?
 
-As we saw previously, both `FA8_423` and `PCA8_423` have showed clear loading patterns. We now look at the TVE tables again to gain more insight on how the eigenvalues (which are the sum of squared loadings by factor or component) describe the portion of each factor or component.
+As we saw previously, both `FA8_423` and `PCA8_423` have showed clear loading patterns.
+We now look at the TVE tables again to gain more insight on how the eigenvalues (which are the sum of squared loadings by factor or component) describe the portion of each factor or component.
 
+The names assigned to the factors reference the first analysis we made under the correlation matrix at the start of the report.
+For clarity we will make a brief recap of each factor:
+
+-   `Aesthetics` factor ( including items 1, 10, 20 and 27).
+    All questions making up this factor regard the appearance of the object itself, which makes sense smartphones are object that are constantly in our hands and work with them.
+    There is for sure some added status gain that comes with a cool or professional looking phone.
+
+-   `Performance` factor ( including items 2, 5, 7, 12 and 16).
+    This of course measures how important performance is for the consumer, buying a smartphone in most cases is not the smallest expense therefore, the client overall wants to invest in an item that does what it is supposed to do and does it well, is reliable.
+
+-   `Ease of use` factor ( including items 3, 11, 13 and 30).
+    This factor speaks for the client need to have a usable and convenient smartphone, something that does not take long to get used to.
+    Smartphones have become more intuitive in their operating systems' functions over the years, this is an important metric for an object created to "simplify" day to day life.
+    It also speaks for a difference in buying public, not everyone is the same age nor has the same background.
+
+-   `Features` factor ( including items 6, 8, 18 and 25).
+    All the questions in this factor reference to "extra features" outside the core functions of a phone.
+    Smartphones of course are multifunctional items, the client is paying for many different functionalities.
+
+-   `Serviceability` factor ( including items 9, 14, 19, 21 and 24).
+    This factor describes customer service, which is part of the client experience.
+    So how quickly and efficiently you can get assistance, remotely or in-store.
+
+-   `Flawlessness` factor ( including items 22, 29 and 33).
+    This concerns glitches and random malfunctions that one might incur into, which harm the "trust" the consumer has in the product and possibly their future purchase choices.
+
+-   `Durability` factor ( including items 26, 28 and 31).
+    This is quite self explanatory, but of course as much as some people might switch phones quite regularly not everyone "consumes" in the same way, how durable the object is very import for some people.
 
 ```{r eigenvalues and importance}
 TVE_PAF <- FA8_423$Vaccounted
@@ -635,7 +695,9 @@ TVE_PAF %>% kable(digits = 3) %>% kable_styling(full_width = TRUE)
 TVE_PCA %>% kable(digits = 3) %>% kable_styling(full_width = TRUE)
 ```
 
-In both PAF and PCA, the top three factors or components explaining the bigger proportions of variance are Serviceability, Performance and Aesthetics. The only change of order between factors is Features and Flawlessness which switch places between the two models. To better visualize the repartition of explained variance among factors, we display two Pareto charts.
+In both PAF and PCA, the top three factors or components explaining the bigger proportions of variance are Serviceability, Performance and Aesthetics.
+The only change of order between factors is Features and Flawlessness which switch places between the two models.
+To better visualize the repartition of explained variance among factors, we display two Pareto charts.
 
 ```{r pareto chart PAF}
 ggplot(mapping = aes(x = reorder(colnames(TVE_PAF), -TVE_PAF[4,]), y = TVE_PAF[4,])) +
@@ -661,16 +723,17 @@ ggplot(mapping = aes(x = reorder(colnames(TVE_PCA), -TVE_PCA[4,]), y = TVE_PCA[4
 rm(TVE_PAF, TVE_PCA)
 ```
 
-In both cases, Serviceability is the dimension which is more important, with the biggest gap compared to other dimensions. The Pareto curve is very smooth and flat, which means that the importance of each dimension is a slow decrease. This can also be observed by the fact that gaps are minimal between each bar once we pass Serviceability. This means that even if there are some more important dimensions, all dimensions bring their share in explaining part of the TVE, there does not seem to be a superfluous or unimportant dimension.
-
-
+In both cases, Serviceability is the dimension which is more important, with the biggest gap compared to other dimensions.
+The Pareto curve is very smooth and flat, which means that the importance of each dimension is a slow decrease.
+This can also be observed by the fact that gaps are minimal between each bar once we pass Serviceability.
+This means that even if there are some more important dimensions, all dimensions bring their share in explaining part of the TVE, there does not seem to be a superfluous or unimportant dimension.
 
 # Oblique Factor Analysis
 
 ## Run an oblique factor analysis with the variables of your final solution in exercise 1 using Promax.
 
-We run the OFA with principal axis factoring like before. What changes is the rotation method, which is not orthogonal anymore, but accounts for correlations between factors (thus the term oblique).
-
+We run the OFA with principal axis factoring like before.
+What changes is the rotation method, which is not orthogonal anymore, but accounts for correlations between factors (thus the term oblique).
 
 ```{r OFA8_423}
 OFA8_423 <- fa(df1[, -c(4, 23)], nfactors = 8, rotate = "promax", fm = "pa")
@@ -694,9 +757,12 @@ rownames(cor_fac) <- c("Serviceability", "Performance", "Aesthetics", "Ease of u
 corrplot(cor_fac)
 ```
 
-The highest correlation is between Performance and Features at 0.72. Both factors are quite close, as the performance of a smartphone can be linked to the performance of the features of said smartphone, and conversely one can think about the performance of a particular extra feature. The two topics having some overlap, as we also saw for example in past models with `qd8` being partially loaded onto the Performance construct, it is not surprising that they are quite strongly correlated.
+The highest correlation is between Performance and Features at 0.72.
+Both factors are quite close, as the performance of a smartphone can be linked to the performance of the features of said smartphone, and conversely one can think about the performance of a particular extra feature.
+The two topics having some overlap, as we also saw for example in past models with `qd8` being partially loaded onto the Performance construct, it is not surprising that they are quite strongly correlated.
 
-The lowest correlation is between Serviceability and Flawlessness, at 0.40. This also seems logical, as the relationship between customer service and the defects or glitches of a smartphone is quite removed, we would expect them not to be strongly correlated.
+The lowest correlation is between Serviceability and Flawlessness, at 0.40.
+This also seems logical, as the relationship between customer service and the defects or glitches of a smartphone is quite removed, we would expect them not to be strongly correlated.
 
 We display a boxplot of the values of the correlations between factors (except for the diagonal values which are always 1).
 
@@ -716,11 +782,15 @@ ggplot(mapping = aes(y = cor_fac)) +
 rm(cor_fac)
 ```
 
-Correlations between distinct factors range, as we saw, between 0.4 and 0.7. The median is around 0.55, with half the values being roughly between 0.51 and 0.61. This shows that correlations between factors are quite strong. Orthogonal factor analysis done in exercise 1 might not have been the best model to describe the factors, as correlations are significant.
+Correlations between distinct factors range, as we saw, between 0.4 and 0.7.
+The median is around 0.55, with half the values being roughly between 0.51 and 0.61.
+This shows that correlations between factors are quite strong.
+Orthogonal factor analysis done in exercise 1 might not have been the best model to describe the factors, as correlations are significant.
 
 ## Compute factor scores for your factors and name and label them appropriately.
 
-We can fetch the factor scores directly inside our model. We rename the columns as we did with the correlation matrix before and display the first six rows of our factor scores.
+We can fetch the factor scores directly inside our model.
+We rename the columns as we did with the correlation matrix before and display the first six rows of our factor scores.
 
 ```{r factor scores}
 factors <- as.data.frame(OFA8_423$scores)
@@ -733,7 +803,8 @@ head(factors) %>% kable(digits = 2) %>% kable_styling(full_width = TRUE)
 
 ## Compute mean scores for the three willingness to pay premium items `wtp1`, `wtp2`, `wtp3` and the two repurchase intention items `ri1`, `ri2`.
 
-We create a dataframe selecting all columns which will be useful for the rest of this exercise. We remove NA values from the dataframe.
+We create a dataframe selecting all columns which will be useful for the rest of this exercise.
+We remove NA values from the dataframe.
 
 ```{r dfobl}
 dfobl <- df[, c(9:41, 43,44,45, 51,52, 74)]
@@ -744,11 +815,11 @@ We use factor analysis to construct two factors from the five variables mentione
 
 For reference we will present the questions each variable corresponds to:
 
-- **wtp1**: I am likely to pay a little bit more for using my current smartphone's brand
-- **wtp2**: If my current smartphone's brand were to raise the price by 10%, I would likely remain with it
-- **wtp3**: I am willing to pay more for my current smartphone's brand
-- **ri1**: I intend to buy my current smartphone's brand in my next purchase
-- **ri2**: If I want to buy a smartphone again, I will buy my current brand
+-   **wtp1**: I am likely to pay a little bit more for using my current smartphone's brand
+-   **wtp2**: If my current smartphone's brand were to raise the price by 10%, I would likely remain with it
+-   **wtp3**: I am willing to pay more for my current smartphone's brand
+-   **ri1**: I intend to buy my current smartphone's brand in my next purchase
+-   **ri2**: If I want to buy a smartphone again, I will buy my current brand
 
 We look at the means of these five questions.
 
@@ -768,7 +839,6 @@ t(matrix(c(1,2,3,4,5,6,7,
 
 This means that on average for willingness to pay premium, people answered between "Neither agree nor disagree" and "Somewhat agree", whereas for repurchase intention, they answered between "Somewhat agree" and "Agree".
 
-
 Now, we construct our two factors from the five variables.
 
 ```{r wtp ri factors}
@@ -778,12 +848,15 @@ y_factor_model$loadings
 y_factor_model$Phi
 ```
 
-Regarding the loadings we see that `wtp2` loads on both factors. In fact if we re-read the question, we can see how that would be the case, the client is asked about a price raise and the likelihood of them sticking with said product. So the factors of willing to pay for premium items/services and repurchase intention intersect each other.
+Regarding the loadings we see that `wtp2` loads on both factors.
+In fact if we re-read the question, we can see how that would be the case, the client is asked about a price raise and the likelihood of them sticking with said product.
+So the factors of willing to pay for premium items/services and repurchase intention intersect each other.
 
 This also logically makes sense, because in the not precisely formulated question wtp2 there is space for interpretation in thinking that there might be repurchase implications.
 
-
-Moreover, we look at the correlation matrix of the factors which this being factor analysis are allowed to be correlated, the correlation is 73.7%. Again, this is quite intuitive, the willingness of paying for premium objects, speaks for an intentions of continuity. The user is willing to pay for extra services is interested in sticking to the brand of choice for a extended period of time.
+Moreover, we look at the correlation matrix of the factors which this being factor analysis are allowed to be correlated, the correlation is 73.7%.
+Again, this is quite intuitive, the willingness of paying for premium objects, speaks for an intentions of continuity.
+The user is willing to pay for extra services is interested in sticking to the brand of choice for a extended period of time.
 
 ```{r dfreg}
 # Create data frame for the regressions
@@ -797,22 +870,33 @@ dfreg <- as.data.frame(dfreg)
 
 ### Willingness to pay for premium items regression
 
-In this case we are not considering qd4 and qd23, of course the intention of re-purchase is not considered among the predictor. The dependent variable is the factor for willingness to pay.
+In this case we are not considering qd4 and qd23, of course the intention of re-purchase is not considered among the predictor.
+The dependent variable is the factor for willingness to pay.
 The `lm()` function takes care of standardising the data so to make the coefficients comparables.
 
 ```{r reg wtp}
+# Not including qd4 and qd23
 lmreg <- lm(wtp ~. , data = dfreg[, -c(10,11,12)])
 summary(lmreg)
 ```
 
-The predictors resulting significant are (in this order) "Ease of Use" with a 0.18 coefficient. Serviceability and Features are the most relevant factors. Performance and Quality of materials have a 99% significance level.
+The predictors resulting significant are (in this order) "Ease of Use" with a 0.18 coefficient.
+Serviceability and Features are the most relevant factors.
+Performance and Quality of materials have a 99% significance level.
 Flawlessness and Durability do not seem to be the most relevant factors, which seems coherent given that a lot of people change change their phones in order to stay on top of the new trends.
 
+Regarding, the whole model we must take note of the fact that R\^2 measures are very low (barely rounding to 37%).
 
 ```{r reg wtp with 423}
+# Including qd4 and qd23
 lmreg <- lm(wtp ~. , data = dfreg[, -10])
 summary(lmreg)
 ```
+
+Including the two variables that were singled out through the Factor Analysis we have a very small gain in terms of Adj R\^2.
+Ease of use remains the strongest feature, but also qd23 seems to be very relevant, the prestige attributed to the phone is a driving element in describing the willingness to pay for premium items.
+This also makes logical sense, moreover we might have some further insight on this dynamic once we run linear regressions filtering for brands.
+Serviceability, Features and Performance play a part again the client is willing to spend the extra money
 
 ```{r reg ri}
 lmreg <- lm(ri ~. , data = dfreg[, -c(9,11,12)])
@@ -826,7 +910,7 @@ summary(lmreg)
 
 ## Do the results of the regression analysis for repurchase intentions differ across brands?
 
-```{r brands barplot} 
+```{r brands barplot}
 dfreg$brandrec <- as.factor(dfobl$brandrec)
 levels(dfreg$brandrec) <- c("Apple", "Samsung", "LG", "Motorola", "Other")
 
@@ -839,7 +923,6 @@ ggplot(data = dfreg, aes(brandrec)) +
 
 summary(dfreg$brandrec)
 ```
-
 
 ```{r reg apple}
 lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Apple", -13])
@@ -882,7 +965,3 @@ ggplot(data = melt(dfreg[, c(1:8, 13)]), aes(y = value, color = brandrec)) +
        y = "Factor score",
        color = "Brand")
 ```
-
-
-
-
