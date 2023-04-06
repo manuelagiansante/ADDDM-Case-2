@@ -410,8 +410,6 @@ These reasons combined made us choose model `FA8_423`.
 Its constructs are the ones we listed when we inspected the correlation matrix (except of course the constructs of questions 4 and 23).
 The loading patterns of `FA8_423`, as we discussed in the previous point, are clear.
 
-**An additional reason is that in the case in which we decide for qd4 and qd23 to form single standing factors , is the fact that these variable are not correlated to any of the other factors.**
-
 ## Run a principal component analysis (PCA) and compare the results.
 
 Like with PAF, we run models with number of components ranging from 1 to 33 and will examine some criteria to get an idea of which ones best fit our data.
@@ -896,17 +894,28 @@ summary(lmreg)
 Including the two variables that were singled out through the Factor Analysis we have a very small gain in terms of Adj R\^2.
 Ease of use remains the strongest feature, but also qd23 seems to be very relevant, the prestige attributed to the phone is a driving element in describing the willingness to pay for premium items.
 This also makes logical sense, moreover we might have some further insight on this dynamic once we run linear regressions filtering for brands.
-Serviceability, Features and Performance play a part again the client is willing to spend the extra money
+Serviceability, Features and Performance play a part again the client is willing to spend the extra money.
+Finally, we take notice of the negative coefficient for flawlessness.
+
+### Re-purchase Intentions Regression
 
 ```{r reg ri}
+# Regression Analysis for re-purchasing behaviour, not considering qd4 and qd23
 lmreg <- lm(ri ~. , data = dfreg[, -c(9,11,12)])
 summary(lmreg)
 ```
 
+Re-purchasing behaviour seems to be driven by the factors explaining Performance and Ease of Use, yet we lose significance for all other factors.
+We have explained variance with 43% adjusted R^2.
+
 ```{r reg ri with 423}
+# Including the excluded variables
 lmreg <- lm(ri ~. , data = dfreg[, -9])
 summary(lmreg)
 ```
+
+The included variables (Distinctiveness and Prestige) do not increase the explained variance by much. Their corresponding coefficients are significant, qd23 has the higher significance, here as well a brand specific analysis might shine some light on this peculiarity.
+
 
 ## Do the results of the regression analysis for repurchase intentions differ across brands?
 
@@ -924,15 +933,24 @@ ggplot(data = dfreg, aes(brandrec)) +
 summary(dfreg$brandrec)
 ```
 
+The plot above is to state how the amount of data that we have for each brand might influence the results of the regression analyses.
+
 ```{r reg apple}
 lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Apple", -13])
 summary(lmreg)
 ```
 
+For Apple buyers, the factors driving re-purchasing behaviour are Prestige, Serviceability, Aesthetics and Ease of Use. In fact, we know these are all striking characteristics of the company. Apple has high level costumer service, and it is considered the top brand for smartphones in terms of brand recognition.
+
 ```{r reg samsung}
 lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Samsung", -13])
 summary(lmreg)
 ```
+
+For Samsung the most important features seems to be Ease of Use, Prestige and Performance. Samsung out of general knowledge can be framed as reliable brand. 
+
+The past two  brand specific regressions still have low R^2 measures, still better than some more comprehensive models.
+
 
 ```{r reg lg}
 lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "LG", -13])
@@ -944,6 +962,8 @@ lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Motorola", -13])
 summary(lmreg)
 ```
 
+The most important feature is Ease of Use which we could presume is due to what kind of customer buys Motorola smartphones. That kind of client most likely is not interested in "how the product looks", what the customer is looking for within Motorola is an item that is easy to use. Here, we could for example discuss age, income, job and so on which certainly are part of this choice in re-purchasing a Motorola phone.
+
 ```{r reg other}
 lmreg <- lm(wtp + ri ~. , data = dfreg[dfreg$brandrec == "Other", -13])
 summary(lmreg)
@@ -951,9 +971,14 @@ summary(lmreg)
 
 ## What do the results of these regressions imply?
 
+We commented each one of them above, but in conclusion we can identify what factors drive consumer behaviour within those brands. So in terms of Re-purchasing behaviour and willingness to pay premium each brand will have to invest in its core features, which after all make up the brand identity and make the product stand out depending on what the customer is looking for.
+For Apple which out of all of the brands we have data on is the one with the strongest profile in terms of reputation we see all the characteristics which are in fact prominent.
+For SamSung Performance was very important, again it is common knowledge how Android is a highly compatible operating system whilst that is not the case for IOS. This is also stimulus for the customer to continue investing in the brand, how easy it is to switch to another provider? how many collateral changes does the person have to make?
+LG and Motorola have very small datasets which impact the results, but of course we can assume that those brands offer more efficient alternatives, therefore the customer might have different approaches in terms of willingness to pay premium and re-purchase. The brands themselves might even invest less premium/extra items/services which the customer knows, they might be less interested in have a large variety of adds-on which is also the reason why they decide to buy from these brands.
+
 ## Please compare the brands on the factor scores. What are points of parity and points of difference for the different brands.
 
-```{r boxplots factor and brand}
+```{r boxplots factor and brand, warning=FALSE}
 ggplot(data = melt(dfreg[, c(1:8, 13)]), aes(y = value, color = brandrec)) +
   facet_wrap(~ variable, nrow = 2) +
   geom_boxplot() +
@@ -965,3 +990,9 @@ ggplot(data = melt(dfreg[, c(1:8, 13)]), aes(y = value, color = brandrec)) +
        y = "Factor score",
        color = "Brand")
 ```
+
+For easy comparison we have created box-plots for each factor and how each brand moves within those parameters. 
+- Serviceability is on the same level for the main 4 brands, whilst we cannot say the same for the undistinguished "Other" group.
+- Aesthetics and Flawlessness are features where all brands find parity in terms of responses.
+- Features and Quality of materials are the factors were more differentiation is observable, but for the latter Samsung and Apple are on the same level.
+- Durability is not as important to customers as the expense for the smartphones decreases (we assume Apple to be the most expensive out of common knowledge) .
